@@ -1,6 +1,6 @@
 CSS
 
-/* ADI INTERNATIONAL — Professional Responsive Design */
+/* ADI INTERNATIONAL — Professional Responsive Design + Advertising */
 
 :root {
   --adi-blue: #0756a5;
@@ -24,6 +24,10 @@ body {
   background: var(--adi-light);
   color: var(--adi-dark);
   line-height: 1.7;
+}
+
+a, button, input, select, textarea {
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* HEADER */
@@ -102,6 +106,7 @@ nav a:hover {
   border-radius: 50%;
   right: -80px;
   top: -70px;
+  pointer-events: none;
 }
 
 .eyebrow {
@@ -235,10 +240,181 @@ nav a:hover {
   border-radius: 4px;
 }
 
+/* ADVERTISING SECTION */
+
+#publicite {
+  scroll-margin-top: 100px;
+  background: var(--adi-light);
+}
+
+#publicite > p {
+  color: var(--adi-gray);
+  max-width: 750px;
+  margin-bottom: 28px;
+}
+
+/* ADVERTISER BANNER */
+
+.advert-banner {
+  background: linear-gradient(135deg, #ffffff, #f4f8ff);
+  border: 1px solid #e5c957;
+  border-radius: 16px;
+  padding: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  box-shadow: 0 6px 20px rgba(6, 57, 109, 0.06);
+  margin: 30px 0;
+}
+
+.advert-banner b {
+  display: block;
+  color: var(--adi-blue);
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+
+.advert-banner h3 {
+  color: var(--adi-blue-dark);
+  font-size: clamp(22px, 3vw, 30px);
+  line-height: 1.3;
+  margin: 10px 0;
+}
+
+.advert-banner p {
+  color: var(--adi-gray);
+  margin: 8px 0 20px;
+}
+
+/* SPONSORED CARDS */
+
+.sponsored-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  margin: 35px 0;
+}
+
+.sponsored-card {
+  position: relative;
+  background: var(--adi-white);
+  border: 1px solid #e8ce65;
+  border-top: 4px solid var(--adi-yellow);
+  border-radius: 14px;
+  padding: 26px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sponsored-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(6, 57, 109, 0.10);
+}
+
+.sponsored-label {
+  display: inline-block;
+  background: #fff4ce;
+  color: #785c00;
+  border-radius: 30px;
+  padding: 5px 10px;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  margin-bottom: 15px;
+}
+
+.sponsored-card > b {
+  display: block;
+  color: var(--adi-blue);
+  font-size: 13px;
+}
+
+.sponsored-card h3 {
+  font-size: 20px;
+  line-height: 1.3;
+  margin: 10px 0;
+  color: var(--adi-dark);
+}
+
+.sponsored-card p {
+  font-size: 14px;
+  color: var(--adi-gray);
+  margin-bottom: 0;
+}
+
+/* ADVERTISER FORM */
+
+.advert-form-section {
+  margin-top: 55px;
+  padding: 35px;
+  background: var(--adi-white);
+  border: 1px solid var(--adi-border);
+  border-radius: 16px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.04);
+}
+
+.advert-form-section h2 {
+  margin-bottom: 15px;
+}
+
+.advert-form-section > p {
+  color: var(--adi-gray);
+  max-width: 650px;
+}
+
+#advertiserForm {
+  max-width: 700px;
+  margin-top: 25px;
+}
+
+#advertiserForm label {
+  display: block;
+  font-weight: bold;
+  font-size: 14px;
+  margin: 16px 0 6px;
+}
+
+#advertiserForm input,
+#advertiserForm textarea,
+#advertiserForm select {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #ccd6e2;
+  border-radius: 8px;
+  font: inherit;
+  background: #fbfdff;
+  color: var(--adi-dark);
+  outline: none;
+}
+
+#advertiserForm input:focus,
+#advertiserForm textarea:focus,
+#advertiserForm select:focus {
+  border-color: var(--adi-blue);
+  box-shadow: 0 0 0 3px rgba(7, 86, 165, 0.1);
+}
+
+#advertiserForm textarea {
+  resize: vertical;
+  margin-bottom: 18px;
+}
+
+#advertiserForm button {
+  margin-top: 10px;
+}
+
+#advertiserMsg {
+  margin-top: 15px;
+  color: var(--adi-blue-dark);
+}
+
 /* CONTACT */
 
 #contact {
   background: var(--adi-light);
+  scroll-margin-top: 100px;
 }
 
 #contact > p {
@@ -310,7 +486,7 @@ footer span {
   color: #d7e6f8;
 }
 
-/* MOBILE */
+/* TABLET */
 
 @media (max-width: 800px) {
   .top {
@@ -324,7 +500,8 @@ footer span {
     gap: 17px;
   }
 
-  .cards {
+  .cards,
+  .sponsored-grid {
     grid-template-columns: 1fr;
   }
 
@@ -335,11 +512,25 @@ footer span {
   .section {
     padding: 55px 7%;
   }
+
+  .advert-banner {
+    padding: 24px;
+  }
+
+  .advert-form-section {
+    padding: 26px;
+  }
 }
+
+/* MOBILE */
 
 @media (max-width: 480px) {
   .brand {
     font-size: 19px;
+  }
+
+  nav {
+    gap: 12px;
   }
 
   nav a {
@@ -354,8 +545,32 @@ footer span {
     font-size: 15px;
   }
 
-  #contactForm {
+  #contactForm,
+  .advert-form-section {
     padding: 20px;
+  }
+
+  .advert-banner {
+    padding: 18px;
+  }
+
+  .advert-banner h3 {
+    font-size: 22px;
+  }
+
+  .advert-banner .cta {
+    width: 100%;
+    text-align: center;
+  }
+
+  .sponsored-card {
+    padding: 21px;
+  }
+
+  #advertiserForm button,
+  #contactForm button {
+    width: 100%;
+    text-align: center;
   }
 
   footer {
@@ -364,137 +579,13 @@ footer span {
   }
 }
 
-CSS
-/* ADI INTERNATIONAL — Advertising Integration */
+/* ACCESSIBILITY / REDUCED MOTION */
 
-.adbanner {
-  background: linear-gradient(135deg, #ffffff, #f4f8ff);
-  border: 1px solid #e5c957;
-  border-radius: 16px;
-  padding: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap;
-  box-shadow: 0 6px 20px rgba(6, 57, 109, 0.06);
-}
-
-.adbanner strong {
-  display: block;
-  color: var(--adi-blue-dark);
-  font-size: 20px;
-}
-
-.adbanner p {
-  color: var(--adi-gray);
-  margin: 8px 0;
-}
-
-.adbanner .btn {
-  background: var(--adi-yellow);
-  color: var(--adi-blue-dark);
-  border-radius: 8px;
-  padding: 12px 20px;
-  font-weight: bold;
-  text-decoration: none;
-}
-
-.sponsored {
-  border: 1px solid #e8ce65;
-  background: #fffdf5;
-}
-
-.tag {
-  display: inline-block;
-  background: #fff4ce;
-  color: #785c00;
-  border-radius: 30px;
-  padding: 5px 10px;
-  font-size: 11px;
-  font-weight: bold;
-  letter-spacing: 0.5px;
-}
-
-#publicite {
-  scroll-margin-top: 100px;
-}
-
-#contact {
-  scroll-margin-top: 100px;
-}
-
-.advertising-card {
-  border-top: 4px solid var(--adi-yellow);
-}
-
-.advertising-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 25px rgba(6, 57, 109, 0.10);
-  transition: 0.2s ease;
-}
-
-/* Mobile */
-@media (max-width: 600px) {
-  .adbanner {
-    padding: 18px;
-  }
-
-  .adbanner strong {
-    font-size: 18px;
-  }
-
-  .adbanner .btn {
-    width: 100%;
-    text-align: center;
-  }
-}
-CSS
-/* ADI — Advertiser Form */
-
-#advertisingForm {
-  max-width: 700px;
-  background: var(--adi-white);
-  padding: 28px;
-  border-radius: 14px;
-  border: 1px solid var(--adi-border);
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.04);
-}
-
-#advertisingForm label {
-  display: block;
-  font-weight: bold;
-  font-size: 14px;
-  margin: 16px 0 6px;
-}
-
-#advertisingForm input,
-#advertisingForm textarea,
-#advertisingForm select {
-  width: 100%;
-  padding: 13px;
-  border: 1px solid #ccd6e2;
-  border-radius: 8px;
-  font: inherit;
-  background: #fbfdff;
-  color: var(--adi-dark);
-}
-
-#advertisingForm textarea {
-  resize: vertical;
-}
-
-#advertisingForm button {
-  margin-top: 18px;
-}
-
-#advertisingMsg {
-  margin-top: 15px;
-  color: var(--adi-blue-dark);
-}
-
-@media (max-width: 480px) {
-  #advertisingForm {
-    padding: 20px;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
   }
 }
