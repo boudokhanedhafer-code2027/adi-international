@@ -449,3 +449,52 @@ CSS
     text-align: center;
   }
 }
+CSS
+/* ADI — Advertiser Form */
+
+#advertisingForm {
+  max-width: 700px;
+  background: var(--adi-white);
+  padding: 28px;
+  border-radius: 14px;
+  border: 1px solid var(--adi-border);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.04);
+}
+
+#advertisingForm label {
+  display: block;
+  font-weight: bold;
+  font-size: 14px;
+  margin: 16px 0 6px;
+}
+
+#advertisingForm input,
+#advertisingForm textarea,
+#advertisingForm select {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #ccd6e2;
+  border-radius: 8px;
+  font: inherit;
+  background: #fbfdff;
+  color: var(--adi-dark);
+}
+
+#advertisingForm textarea {
+  resize: vertical;
+}
+
+#advertisingForm button {
+  margin-top: 18px;
+}
+
+#advertisingMsg {
+  margin-top: 15px;
+  color: var(--adi-blue-dark);
+}
+
+@media (max-width: 480px) {
+  #advertisingForm {
+    padding: 20px;
+  }
+}
