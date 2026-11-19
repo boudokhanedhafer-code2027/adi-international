@@ -364,3 +364,88 @@ footer span {
   }
 }
 
+CSS
+/* ADI INTERNATIONAL — Advertising Integration */
+
+.adbanner {
+  background: linear-gradient(135deg, #ffffff, #f4f8ff);
+  border: 1px solid #e5c957;
+  border-radius: 16px;
+  padding: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  box-shadow: 0 6px 20px rgba(6, 57, 109, 0.06);
+}
+
+.adbanner strong {
+  display: block;
+  color: var(--adi-blue-dark);
+  font-size: 20px;
+}
+
+.adbanner p {
+  color: var(--adi-gray);
+  margin: 8px 0;
+}
+
+.adbanner .btn {
+  background: var(--adi-yellow);
+  color: var(--adi-blue-dark);
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.sponsored {
+  border: 1px solid #e8ce65;
+  background: #fffdf5;
+}
+
+.tag {
+  display: inline-block;
+  background: #fff4ce;
+  color: #785c00;
+  border-radius: 30px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+#publicite {
+  scroll-margin-top: 100px;
+}
+
+#contact {
+  scroll-margin-top: 100px;
+}
+
+.advertising-card {
+  border-top: 4px solid var(--adi-yellow);
+}
+
+.advertising-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(6, 57, 109, 0.10);
+  transition: 0.2s ease;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .adbanner {
+    padding: 18px;
+  }
+
+  .adbanner strong {
+    font-size: 18px;
+  }
+
+  .adbanner .btn {
+    width: 100%;
+    text-align: center;
+  }
+}
