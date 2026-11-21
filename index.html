@@ -1,399 +1,465 @@
-HTML
 
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="ADI INTERNATIONAL — plateforme de découverte et de mise en relation commerciale.">
-  <title>ADI INTERNATIONAL</title>
-  <link rel="stylesheet" href="assets/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ADI INTERNATIONAL - Découvrez des produits internationaux, comparez les offres et demandez vos produits.">
+  <title>ADI INTERNATIONAL | Marketplace internationale</title>
+
+  <style>
+    :root {
+      --blue: #0756a5;
+      --dark: #07345f;
+      --yellow: #f5c400;
+      --light: #f4f7fb;
+      --white: #ffffff;
+      --text: #172b45;
+      --gray: #68788c;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background: var(--light);
+      line-height: 1.6;
+    }
+
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; display: block; }
+
+    .topbar {
+      background: var(--white);
+      padding: 14px 6%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid #e6edf5;
+    }
+
+    .logo {
+      color: var(--blue);
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    .logo span { color: var(--yellow); }
+
+    .nav {
+      display: flex;
+      gap: 22px;
+      flex-wrap: wrap;
+      align-items: center;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .nav a:hover { color: var(--blue); }
+
+    .lang {
+      background: var(--blue);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .hero {
+      background: linear-gradient(120deg, #06396d, #0874c9);
+      color: white;
+      padding: 65px 6% 55px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-content { max-width: 760px; }
+
+    .eyebrow {
+      color: var(--yellow);
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 13px;
+    }
+
+    .hero h1 {
+      font-size: clamp(34px, 6vw, 58px);
+      line-height: 1.12;
+      margin: 15px 0;
+    }
+
+    .hero p {
+      color: #e5efff;
+      font-size: 17px;
+      max-width: 600px;
+      margin-bottom: 25px;
+    }
+
+    .search {
+      display: flex;
+      max-width: 600px;
+      background: white;
+      border-radius: 12px;
+      padding: 6px;
+      gap: 6px;
+    }
+
+    .search input {
+      flex: 1;
+      min-width: 0;
+      border: 0;
+      outline: none;
+      padding: 13px;
+      font-size: 15px;
+    }
+
+    .btn {
+      display: inline-block;
+      border: 0;
+      background: var(--yellow);
+      color: var(--dark);
+      font-weight: bold;
+      padding: 13px 20px;
+      border-radius: 9px;
+      cursor: pointer;
+    }
+
+    .btn-blue {
+      background: var(--blue);
+      color: white;
+    }
+
+    .section {
+      padding: 42px 6%;
+    }
+
+    .section-title {
+      margin-bottom: 22px;
+    }
+
+    .section-title h2 {
+      color: var(--blue);
+      font-size: 28px;
+      margin-bottom: 4px;
+    }
+
+    .section-title p { color: var(--gray); }
+
+    .categories {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .category {
+      background: white;
+      padding: 22px;
+      border-radius: 14px;
+      border: 1px solid #e6edf5;
+      font-weight: bold;
+      transition: transform .2s;
+    }
+
+    .category:hover { transform: translateY(-3px); }
+    .category .emoji { font-size: 30px; margin-bottom: 10px; }
+    .category small { color: var(--gray); font-weight: normal; }
+
+    .products {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .product {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #e5ebf2;
+    }
+
+    .product-image {
+      height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f0f4f9;
+      color: #8da0b7;
+      font-size: 14px;
+    }
+
+    .product-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .product-body { padding: 18px; }
+
+    .tag {
+      display: inline-block;
+      background: #eaf3ff;
+      color: var(--blue);
+      font-size: 12px;
+      padding: 4px 9px;
+      border-radius: 30px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .product h3 { margin-bottom: 8px; }
+
+    .price {
+      color: var(--blue);
+      font-size: 23px;
+      font-weight: 900;
+      margin: 8px 0;
+    }
+
+    .price-note { font-size: 12px; color: var(--gray); }
+
+    .product .btn { margin-top: 12px; width: 100%; text-align: center; }
+
+    .request-banner {
+      margin: 0 6% 42px;
+      background: var(--yellow);
+      padding: 32px;
+      border-radius: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .request-banner h2 { color: var(--dark); margin-bottom: 5px; }
+    .request-banner p { color: #334c68; }
+
+    .request-banner .btn {
+      background: var(--dark);
+      color: white;
+    }
+
+    .advertising {
+      background: white;
+      border: 2px dashed #b8cbe0;
+      padding: 32px;
+      border-radius: 16px;
+      text-align: center;
+    }
+
+    .advertising h2 { color: var(--blue); margin-bottom: 8px; }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .feature {
+      background: white;
+      padding: 20px;
+      border-radius: 14px;
+      border: 1px solid #e6edf5;
+    }
+
+    .feature h3 { color: var(--blue); margin-bottom: 6px; }
+
+    .footer {
+      background: var(--dark);
+      color: white;
+      padding: 32px 6%;
+      margin-top: 20px;
+    }
+
+    .footer p { color: #d5e3f3; font-size: 14px; }
+    .footer .logo { color: white; margin-bottom: 8px; }
+
+    @media (max-width: 850px) {
+      .categories { grid-template-columns: repeat(2, 1fr); }
+      .products { grid-template-columns: repeat(2, 1fr); }
+      .features { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 600px) {
+      .topbar { padding: 14px 5%; }
+      .nav { gap: 12px; font-size: 13px; }
+      .hero { padding: 45px 5%; }
+      .hero p { font-size: 15px; }
+      .search { flex-direction: column; }
+      .search .btn { width: 100%; }
+      .section { padding: 32px 5%; }
+      .categories, .products { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .category { padding: 15px; }
+      .product-image { height: 150px; }
+      .product-body { padding: 13px; }
+      .product h3 { font-size: 15px; }
+      .price { font-size: 20px; }
+      .request-banner { margin: 0 5% 30px; padding: 22px; }
+    }
+  </style>
 </head>
+
 <body>
 
-<header class="top">
-  <a class="brand" href="#home">ADI <span>INTERNATIONAL</span></a>
+<header class="topbar">
+  <a class="logo" href="#">ADI <span>INTERNATIONAL</span></a>
 
-  <nav>
-    <a href="#services" data-fr="Services" data-en="Services">Services</a>
-    <a href="#catalogue" data-fr="Catalogue" data-en="Catalogue">Catalogue</a>
-    <a href="#publicite" data-fr="Publicité" data-en="Advertising">Publicité</a>
-    <a href="#contact" data-fr="Contact" data-en="Contact">Contact</a>
+  <nav class="nav">
+    <a href="#categories">Catégories</a>
+    <a href="#catalogue">Catalogue</a>
+    <a href="#request">Demander un produit</a>
+    <a href="#advertising">Publicité</a>
+    <a href="#contact">Contact</a>
+    <button class="lang" id="lang">EN</button>
   </nav>
-
-  <button id="lang" class="lang" type="button">EN</button>
 </header>
 
-<main>
+<section class="hero">
+  <div class="hero-content">
+    <div class="eyebrow">Découverte · Comparaison · International</div>
+    <h1>Le commerce international, plus accessible.</h1>
+    <p>Découvrez des produits du monde entier. Comparez les offres et demandez le produit qui vous intéresse à ADI INTERNATIONAL.</p>
 
-<!-- BANNIÈRE PUBLICITAIRE ANIMÉE ADI -->
-<section class="adi-promo">
-  <div class="promo-copy">
-    <span class="promo-kicker">SÉLECTION ADI INTERNATIONAL</span>
-
-    <h2>Découvrez les produits autrement.</h2>
-
-    <p>
-      Explorez notre sélection internationale,
-      comparez les offres et découvrez de nouveaux produits.
-    </p>
-
-    <a class="promo-cta" href="#catalogue">
-      Découvrir le catalogue →
-    </a>
-  </div>
-
-  <div class="promo-visual">
-    <div class="promo-glow"></div>
-
-    <img
-      src="https://raw.githubusercontent.com/boudokhanedhafer-code2027/adi-international/main/file_0000000012d88210953f042e1ef57f7c.png"
-      alt="Produit sélectionné ADI International">
-
-    <span class="promo-badge">PRODUIT À DÉCOUVRIR</span>
-  </div>
-</section>
-
-<!-- ACCUEIL -->
-<section class="hero" id="home">
-  <div class="eyebrow">COMMERCE • SOURCING • INTERNATIONAL</div>
-
-  <h1 data-fr="Le commerce international, plus accessible."
-      data-en="International trade, made more accessible.">
-    Le commerce international, plus accessible.
-  </h1>
-
-  <p data-fr="ADI INTERNATIONAL aide les clients à découvrir des produits et à demander des offres auprès de fournisseurs."
-     data-en="ADI INTERNATIONAL helps customers discover products and request offers from suppliers.">
-    ADI INTERNATIONAL aide les clients à découvrir des produits et à demander des offres auprès de fournisseurs.
-  </p>
-
-  <a class="cta" href="#catalogue"
-     data-fr="Découvrir le catalogue"
-     data-en="Explore the catalogue">
-    Découvrir le catalogue
-  </a>
-</section>
-
-<!-- SERVICES -->
-<section id="services" class="section">
-  <div class="eyebrow">01 / <span data-fr="NOS SERVICES" data-en="OUR SERVICES">NOS SERVICES</span></div>
-
-  <h2 data-fr="Une plateforme pour explorer les opportunités."
-      data-en="A platform to explore opportunities.">
-    Une plateforme pour explorer les opportunités.
-  </h2>
-
-  <div class="cards">
-    <article>
-      <b>01</b>
-      <h3 data-fr="Découverte de produits" data-en="Product discovery">Découverte de produits</h3>
-      <p data-fr="Parcourez des catégories et identifiez les articles qui vous intéressent."
-         data-en="Browse categories and identify items that interest you.">
-        Parcourez des catégories et identifiez les articles qui vous intéressent.
-      </p>
-    </article>
-
-    <article>
-      <b>02</b>
-      <h3 data-fr="Demandes d'offres" data-en="Offer requests">Demandes d'offres</h3>
-      <p data-fr="Envoyez une demande pour obtenir des informations et un devis."
-         data-en="Send a request to obtain information and a quotation.">
-        Envoyez une demande pour obtenir des informations et un devis.
-      </p>
-    </article>
-
-    <article>
-      <b>03</b>
-      <h3 data-fr="Mise en relation" data-en="Business connections">Mise en relation</h3>
-      <p data-fr="Comparez les propositions avant toute décision commerciale."
-         data-en="Review proposals before making any business decision.">
-        Comparez les propositions avant toute décision commerciale.
-      </p>
-    </article>
-  </div>
-</section>
-
-<!-- CATALOGUE -->
-<section id="catalogue" class="section tinted">
-  <div class="eyebrow">02 / <span data-fr="CATÉGORIES" data-en="CATEGORIES">CATÉGORIES</span></div>
-
-  <h2 data-fr="Explorez les catégories" data-en="Explore categories">
-    Explorez les catégories
-  </h2>
-
-  <div class="tags">
-    <span>Électronique</span>
-    <span>Maison &amp; décoration</span>
-    <span>Mode &amp; accessoires</span>
-    <span>Équipements</span>
-    <span>Beauté &amp; bien-être</span>
-    <span>Loisirs</span>
-  </div>
-
-  <p class="note"
-     data-fr="Catalogue de démonstration : les produits, prix, stocks et fournisseurs doivent être vérifiés avant toute publication d'offre."
-     data-en="Demo catalogue: products, prices, stock and suppliers must be verified before any offer is published.">
-    Catalogue de démonstration : les produits, prix, stocks et fournisseurs doivent être vérifiés avant toute publication d'offre.
-  </p>
-</section>
-<!-- PRODUIT ADI : SUPPORT TELEPHONE -->
-<div class="product-card" style="background:#fff;border:1px solid #dbe5f0;border-radius:16px;padding:18px;margin:20px 0;">
-
-  <div style="background:#0756a5;color:white;padding:8px;border-radius:10px;text-align:center;">
-    ADI INTERNATIONAL
-  </div>
-
-<img src="https://raw.githubusercontent.com/boudokhanedhafer-code2027/adi-international/main/file_0000000012d88210953f042e1ef57f7c.png"
-style="width:100%;max-width:350px;height:auto;display:block;margin:15px auto;border-radius:12px;">
-  <p>
-    Pratique, compact et polyvalent.
-    Support pour téléphone réglable, idéal pour le bureau,
-    les vidéos et les visioconférences.
-  </p>
-
-  <ul>
-    <li>Angle réglable jusqu'à 75° (selon l'annonce)</li>
-    <li>Pliable et compact</li>
-    <li>Plusieurs couleurs disponibles</li>
-    <li>Stable et antidérapant (selon l'annonce)</li>
-  </ul>
-
-  <<div style="background:#f3f6fa;padding:12px;border-radius:10px;">
-    <p style="color:#0756a5;font-size:20px;">
-      Prix de vente ADI : <strong>2,99 EUR</strong>
-    </p>
-    <p style="font-size:13px;">
-      Prix de vente indicatif, hors frais de livraison.
-    </p>
-  </div>
-  
-
-  <p style="text-align:center;color:#0756a5;font-weight:bold;">
-    Explorez • Comparez • Achetez malin avec ADI
-  </p>
-
-</div>
-
-
-<!-- PUBLICITÉ -->
-<section id="publicite" class="section">
-
-  <div class="eyebrow">03 / <span data-fr="PUBLICITÉ & PARTENARIATS" data-en="ADVERTISING & PARTNERSHIPS">PUBLICITÉ & PARTENARIATS</span></div>
-
-  <h2 data-fr="Donnez de la visibilité à votre marque."
-      data-en="Give your brand more visibility.">
-    Donnez de la visibilité à votre marque.
-  </h2>
-
-  <p data-fr="ADI INTERNATIONAL prépare des espaces de visibilité pour les marques, entreprises et partenaires."
-     data-en="ADI INTERNATIONAL offers planned visibility spaces for brands, businesses and partners.">
-    ADI INTERNATIONAL prépare des espaces de visibilité pour les marques, entreprises et partenaires.
-  </p>
-
-  <!-- BANNIÈRE ANNONCEUR -->
-  <div class="advert-banner">
-    <div>
-      <b data-fr="ESPACE ANNONCEUR" data-en="ADVERTISER SPACE">ESPACE ANNONCEUR</b>
-      <h3 data-fr="Présentez votre marque sur ADI INTERNATIONAL."
-          data-en="Showcase your brand on ADI INTERNATIONAL.">
-        Présentez votre marque sur ADI INTERNATIONAL.
-      </h3>
-      <p data-fr="Emplacements promotionnels de démonstration, disponibles pour une future intégration."
-         data-en="Demo promotional placements prepared for future integration.">
-        Emplacements promotionnels de démonstration, disponibles pour une future intégration.
-      </p>
-      <a class="cta" href="#formAnnonceur"
-         data-fr="Demande annonceur"
-         data-en="Advertiser inquiry">
-        Demande annonceur
-      </a>
-    </div>
-  </div>
-
-  <!-- CARTES SPONSORISÉES -->
-  <div class="sponsored-grid">
-
-    <article class="sponsored-card">
-      <span class="sponsored-label"
-            data-fr="EMPLACEMENT SPONSORISÉ"
-            data-en="SPONSORED PLACEMENT">
-        EMPLACEMENT SPONSORISÉ
-      </span>
-      <b>01</b>
-      <h3 data-fr="Votre marque ici"
-          data-en="Your brand here">
-        Votre marque ici
-      </h3>
-      <p data-fr="Un emplacement de présentation pour une marque ou une offre partenaire."
-         data-en="A presentation slot for a brand or partner offer.">
-        Un emplacement de présentation pour une marque ou une offre partenaire.
-      </p>
-    </article>
-
-    <article class="sponsored-card">
-      <span class="sponsored-label"
-            data-fr="EMPLACEMENT SPONSORISÉ"
-            data-en="SPONSORED PLACEMENT">
-        EMPLACEMENT SPONSORISÉ
-      </span>
-      <b>02</b>
-      <h3 data-fr="Votre campagne ici"
-          data-en="Your campaign here">
-        Votre campagne ici
-      </h3>
-      <p data-fr="Une zone prévue pour les campagnes promotionnelles et annonces."
-         data-en="A space planned for promotional campaigns and announcements.">
-        Une zone prévue pour les campagnes promotionnelles et annonces.
-      </p>
-    </article>
-
-    <article class="sponsored-card">
-      <span class="sponsored-label"
-            data-fr="EMPLACEMENT SPONSORISÉ"
-            data-en="SPONSORED PLACEMENT">
-        EMPLACEMENT SPONSORISÉ
-      </span>
-      <b>03</b>
-      <h3 data-fr="Partenaire à découvrir"
-          data-en="Featured partner">
-        Partenaire à découvrir
-      </h3>
-      <p data-fr="Un espace pour mettre en avant un partenaire sélectionné."
-         data-en="A space to highlight a selected partner.">
-        Un espace pour mettre en avant un partenaire sélectionné.
-      </p>
-    </article>
-
-  </div>
-
-  <!-- FORMULAIRE ANNONCEUR -->
-  <div id="formAnnonceur" class="advert-form-section">
-
-    <div class="eyebrow"
-         data-fr="DEMANDE DE PARTENARIAT"
-         data-en="PARTNERSHIP INQUIRY">
-      DEMANDE DE PARTENARIAT
-    </div>
-
-    <h2 data-fr="Proposer une publicité"
-        data-en="Request advertising">
-      Proposer une publicité
-    </h2>
-
-    <p data-fr="Ce formulaire est une démonstration. Aucune donnée n'est transmise ni enregistrée."
-       data-en="This form is a demo. No data is sent or stored.">
-      Ce formulaire est une démonstration. Aucune donnée n'est transmise ni enregistrée.
-    </p>
-
-    <form id="advertiserForm">
-
-      <label for="advertiserName"
-             data-fr="Nom de l'entreprise"
-             data-en="Company name">
-        Nom de l'entreprise
-      </label>
-      <input id="advertiserName" name="company" type="text"
-             placeholder="Entreprise"
-             autocomplete="organization" required>
-
-      <label for="advertiserEmail">Email</label>
-      <input id="advertiserEmail" name="email" type="email"
-             placeholder="email@exemple.com"
-             autocomplete="email" required>
-
-      <label for="advertiserType"
-             data-fr="Type de publicité"
-             data-en="Advertising type">
-        Type de publicité
-      </label>
-      <select id="advertiserType" name="type" required>
-        <option value=""
-                data-fr="Choisir un emplacement"
-                data-en="Select a placement">
-          Choisir un emplacement
-        </option>
-        <option value="banner"
-                data-fr="Bannière publicitaire"
-                data-en="Advertising banner">
-          Bannière publicitaire
-        </option>
-        <option value="sponsored"
-                data-fr="Carte sponsorisée"
-                data-en="Sponsored card">
-          Carte sponsorisée
-        </option>
-        <option value="partnership"
-                data-fr="Partenariat"
-                data-en="Partnership">
-          Partenariat
-        </option>
-      </select>
-
-      <label for="advertiserMessage"
-             data-fr="Informations complémentaires"
-             data-en="Additional information">
-        Informations complémentaires
-      </label>
-      <textarea id="advertiserMessage" name="message"
-                rows="4" placeholder="..."></textarea>
-
-      <button class="cta" type="submit"
-              data-fr="Prévisualiser la demande"
-              data-en="Preview inquiry">
-        Prévisualiser la demande
-      </button>
-
-      <p id="advertiserMsg" class="note" aria-live="polite"></p>
-
+    <form class="search" id="searchForm">
+      <input type="search" id="searchInput" placeholder="Que recherchez-vous aujourd'hui ?">
+      <button class="btn" type="submit">Rechercher</button>
     </form>
   </div>
-
 </section>
 
-<!-- CONTACT -->
-<section id="contact" class="section">
+<section class="section" id="categories">
+  <div class="section-title">
+    <h2>Explorez nos catégories</h2>
+    <p>Une sélection de produits de différents univers.</p>
+  </div>
 
-  <div class="eyebrow">04 / CONTACT</div>
-
-  <h2 data-fr="Parlons de votre projet."
-      data-en="Let's discuss your project.">
-    Parlons de votre projet.
-  </h2>
-
-  <p data-fr="Pour le moment, utilisez ce formulaire comme maquette. Il n'envoie pas encore de message."
-     data-en="For now, this form is a preview only. It does not send messages yet.">
-    Pour le moment, utilisez ce formulaire comme maquette. Il n'envoie pas encore de message.
-  </p>
-
-  <form id="contactForm">
-    <label data-fr="Votre nom" data-en="Your name">Votre nom</label>
-    <input required placeholder="Nom">
-
-    <label>Email</label>
-    <input type="email" required placeholder="email@exemple.com">
-
-    <label data-fr="Votre message" data-en="Your message">Votre message</label>
-    <textarea required rows="4" placeholder="..."></textarea>
-
-    <button class="cta" type="submit"
-            data-fr="Prévisualiser l'envoi"
-            data-en="Preview submission">
-      Prévisualiser l'envoi
-    </button>
-
-    <p id="formMsg" class="note" aria-live="polite"></p>
-  </form>
+  <div class="categories">
+    <a class="category" href="#catalogue"><div class="emoji">📱</div>Électronique<br><small>Technologie & accessoires</small></a>
+    <a class="category" href="#catalogue"><div class="emoji">🏠</div>Maison<br><small>Équipement & décoration</small></a>
+    <a class="category" href="#catalogue"><div class="emoji">👜</div>Mode<br><small>Accessoires & tendances</small></a>
+    <a class="category" href="#catalogue"><div class="emoji">🛠️</div>Équipements<br><small>Outils & matériel</small></a>
+    <a class="category" href="#catalogue"><div class="emoji">💄</div>Beauté<br><small>Produits & accessoires</small></a>
+    <a class="category" href="#catalogue"><div class="emoji">⚽</div>Loisirs<br><small>Sport & divertissement</small></a>
+    <a class="category" href="#catalogue"><div class="emoji">🚗</div>Automobile<br><small>Accessoires auto</small></a>
+    <a class="category" href="#request"><div class="emoji">🌍</div>Autres produits<br><small>Recherche personnalisée</small></a>
+  </div>
 </section>
 
-</main>
+<section class="section" id="catalogue">
+  <div class="section-title">
+    <h2>Offres sélectionnées ADI</h2>
+    <p>Exemples de présentation — prix et disponibilité à confirmer avant publication.</p>
+  </div>
 
-<footer>
-  <strong>ADI INTERNATIONAL</strong>
-  <span>© <span id="year"></span> — <span data-fr="Tous droits réservés" data-en="All rights reserved">Tous droits réservés</span></span>
+  <div class="products">
+
+    <article class="product">
+      <div class="product-image">Image produit à ajouter</div>
+      <div class="product-body">
+        <span class="tag">Électronique</span>
+        <h3>Support téléphone universel</h3>
+        <div class="price">9,90 €</div>
+        <div class="price-note">Prix d'exemple · offre fournisseur à vérifier</div>
+        <a class="btn btn-blue" href="#request">Demander ce produit</a>
+      </div>
+    </article>
+
+    <article class="product">
+      <div class="product-image">Image produit à ajouter</div>
+      <div class="product-body">
+        <span class="tag">Maison</span>
+        <h3>Accessoire pratique pour la maison</h3>
+        <div class="price">Prix à confirmer</div>
+        <div class="price-note">Prix et disponibilité non vérifiés</div>
+        <a class="btn btn-blue" href="#request">Demander ce produit</a>
+      </div>
+    </article>
+
+    <article class="product">
+      <div class="product-image">Image produit à ajouter</div>
+      <div class="product-body">
+        <span class="tag">Équipements</span>
+        <h3>Équipement multifonction</h3>
+        <div class="price">Prix à confirmer</div>
+        <div class="price-note">Prix et disponibilité non vérifiés</div>
+        <a class="btn btn-blue" href="#request">Demander ce produit</a>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<section class="request-banner" id="request">
+  <div>
+    <h2>Vous cherchez un produit précis ?</h2>
+    <p>ADI recherche des offres auprès de fournisseurs internationaux.</p>
+  </div>
+  <a class="btn" href="#contact">Faire une demande</a>
+</section>
+
+<section class="section" id="advertising">
+  <div class="advertising">
+    <h2>Espace publicité & partenaires</h2>
+    <p>Vous êtes une entreprise ou un fournisseur ? Présentez vos produits et services sur ADI INTERNATIONAL.</p>
+    <a class="btn btn-blue" href="#contact" style="margin-top:15px">Devenir partenaire</a>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-title">
+    <h2>Pourquoi choisir ADI INTERNATIONAL ?</h2>
+  </div>
+
+  <div class="features">
+    <div class="feature">
+      <h3>🌍 Recherche internationale</h3>
+      <p>Découvrez des produits et des offres provenant de différents marchés.</p>
+    </div>
+    <div class="feature">
+      <h3>💶 Prix transparents</h3>
+      <p>Des prix présentés clairement en euros, avec les frais à confirmer.</p>
+    </div>
+    <div class="feature">
+      <h3>🤝 Validation humaine</h3>
+      <p>Chaque demande est vérifiée avant confirmation de commande auprès du fournisseur.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="footer" id="contact">
+  <div class="logo">ADI INTERNATIONAL</div>
+  <p>Le commerce international, plus accessible.</p>
+  <p>Demandes de produits · Fournisseurs · Publicité · Partenariats</p>
+  <p style="margin-top:15px">© <span id="year"></span> ADI INTERNATIONAL</p>
 </footer>
 
-<script src="assets/app.js"></script>
+<script>
+  document.getElementById("year").textContent = new Date().getFullYear();
+
+  document.getElementById("searchForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const query = document.getElementById("searchInput").value.trim();
+
+    if (!query) {
+      alert("Veuillez saisir un produit à rechercher.");
+      return;
+    }
+
+    document.getElementById("catalogue").scrollIntoView({ behavior: "smooth" });
+    alert("La recherche avancée sera connectée lors de la prochaine étape. Produit recherché : " + query);
+  });
+
+  document.getElementById("lang").addEventListener("click", function() {
+    alert("La version anglaise sera activée dans la prochaine étape.");
+  });
+</script>
+
 </body>
 </html>
- 
