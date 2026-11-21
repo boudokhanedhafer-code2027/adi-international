@@ -2,842 +2,474 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ADI INTERNATIONAL : découvrez, comparez et demandez des produits internationaux.">
-  <title>ADI INTERNATIONAL | Marketplace internationale</title>
-
-  <style>
-    :root {
-      --blue: #0756a5;
-      --dark: #07345f;
-      --yellow: #f5c400;
-      --light: #f4f7fb;
-      --white: #ffffff;
-      --text: #172b45;
-      --gray: #68788c;
-      --border: #e2eaf3;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      color: var(--text);
-      background: var(--light);
-      line-height: 1.6;
-    }
-
-    a {
-      text-decoration: none;
-      color: inherit;
-    }
-
-    img {
-      max-width: 100%;
-      display: block;
-    }
-
-    /* HEADER */
-
-    .topbar {
-      background: var(--white);
-      padding: 15px 6%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 20px;
-      flex-wrap: wrap;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .logo {
-      color: var(--blue);
-      font-size: 24px;
-      font-weight: 900;
-      letter-spacing: 1px;
-    }
-
-    .logo span {
-      color: var(--yellow);
-    }
-
-    .nav {
-      display: flex;
-      gap: 18px;
-      flex-wrap: wrap;
-      align-items: center;
-      font-size: 14px;
-      font-weight: bold;
-    }
-
-    .nav a:hover {
-      color: var(--blue);
-    }
-
-    .lang {
-      background: var(--blue);
-      color: white;
-      padding: 9px 13px;
-      border-radius: 8px;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    /* HERO */
-
-    .hero {
-      background: linear-gradient(120deg, #06396d, #0874c9);
-      color: white;
-      padding: 65px 6%;
-    }
-
-    .hero-content {
-      max-width: 760px;
-    }
-
-    .eyebrow {
-      color: var(--yellow);
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      font-size: 13px;
-    }
-
-    .hero h1 {
-      font-size: clamp(34px, 6vw, 58px);
-      line-height: 1.12;
-      margin: 15px 0;
-    }
-
-    .hero p {
-      color: #e5efff;
-      font-size: 17px;
-      max-width: 620px;
-      margin-bottom: 25px;
-    }
-
-    .search {
-      display: flex;
-      max-width: 600px;
-      background: white;
-      border-radius: 12px;
-      padding: 6px;
-      gap: 6px;
-    }
-
-    .search input {
-      flex: 1;
-      min-width: 0;
-      border: 0;
-      outline: none;
-      padding: 13px;
-      font-size: 15px;
-    }
-
-    /* BUTTONS */
-
-    .btn {
-      display: inline-block;
-      border: 0;
-      background: var(--yellow);
-      color: var(--dark);
-      font-weight: bold;
-      padding: 13px 20px;
-      border-radius: 9px;
-      cursor: pointer;
-      text-align: center;
-    }
-
-    .btn-blue {
-      background: var(--blue);
-      color: white;
-    }
-
-    .btn:hover {
-      opacity: 0.9;
-    }
-
-    /* SECTIONS */
-
-    .section {
-      padding: 42px 6%;
-    }
-
-    .section-title {
-      margin-bottom: 22px;
-    }
-
-    .section-title h2 {
-      color: var(--blue);
-      font-size: 28px;
-      margin-bottom: 4px;
-    }
-
-    .section-title p {
-      color: var(--gray);
-    }
-
-    /* CATEGORIES */
-
-    .categories {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-    }
-
-    .category {
-      background: white;
-      padding: 22px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      font-weight: bold;
-      transition: transform .2s;
-    }
-
-    .category:hover {
-      transform: translateY(-3px);
-    }
-
-    .category .emoji {
-      font-size: 30px;
-      margin-bottom: 10px;
-    }
-
-    .category small {
-      color: var(--gray);
-      font-weight: normal;
-    }
-
-    /* CATALOGUE */
-
-    .catalog-search {
-      width: 100%;
-      padding: 14px;
-      border: 1px solid #d5dfeb;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      font-size: 16px;
-      background: white;
-    }
-
-    .products {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-    }
-
-    .product {
-      background: white;
-      border-radius: 16px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-    }
-
-    .product-image {
-      height: 230px;
-      background: #eaf1f9;
-      overflow: hidden;
-    }
-
-    .product-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .product-body {
-      padding: 18px;
-    }
-
-    .tag {
-      display: inline-block;
-      background: #eaf3ff;
-      color: var(--blue);
-      font-size: 12px;
-      padding: 4px 9px;
-      border-radius: 30px;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-
-    .product h3 {
-      margin-bottom: 8px;
-    }
-
-    .product-description {
-      font-size: 14px;
-      color: var(--gray);
-      margin-bottom: 12px;
-    }
-
-    .supplier-price {
-      font-size: 14px;
-      color: #42556d;
-    }
-
-    .price {
-      color: var(--blue);
-      font-size: 25px;
-      font-weight: 900;
-      margin: 8px 0;
-    }
-
-    .price-note {
-      font-size: 12px;
-      color: var(--gray);
-    }
-
-    .product .btn {
-      margin-top: 12px;
-      width: 100%;
-    }
-
-    #catalogMessage {
-      margin-top: 15px;
-      color: var(--blue);
-      font-weight: bold;
-    }
-
-    /* REQUEST BANNER */
-
-    .request-banner {
-      margin: 0 6% 42px;
-      background: var(--yellow);
-      padding: 32px;
-      border-radius: 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-
-    .request-banner h2 {
-      color: var(--dark);
-      margin-bottom: 5px;
-    }
-
-    .request-banner p {
-      color: #334c68;
-    }
-
-    .request-banner .btn {
-      background: var(--dark);
-      color: white;
-    }
-
-    /* ADVERTISING */
-
-    .advertising {
-      background: white;
-      border: 2px dashed #b8cbe0;
-      padding: 32px;
-      border-radius: 16px;
-      text-align: center;
-    }
-
-    .advertising h2 {
-      color: var(--blue);
-      margin-bottom: 8px;
-    }
-
-    /* FEATURES */
-
-    .features {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-    }
-
-    .feature {
-      background: white;
-      padding: 20px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-    }
-
-    .feature h3 {
-      color: var(--blue);
-      margin-bottom: 6px;
-    }
-
-    /* FOOTER */
-
-    .footer {
-      background: var(--dark);
-      color: white;
-      padding: 32px 6%;
-      margin-top: 20px;
-    }
-
-    .footer p {
-      color: #d5e3f3;
-      font-size: 14px;
-    }
-
-    .footer .logo {
-      color: white;
-      margin-bottom: 8px;
-    }
-
-    /* RESPONSIVE */
-
-    @media (max-width: 850px) {
-      .categories {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .products {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .features {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 600px) {
-      .topbar {
-        padding: 14px 5%;
-      }
-
-      .nav {
-        gap: 12px;
-        font-size: 13px;
-      }
-
-      .hero {
-        padding: 45px 5%;
-      }
-
-      .hero p {
-        font-size: 15px;
-      }
-
-      .search {
-        flex-direction: column;
-      }
-
-      .search .btn {
-        width: 100%;
-      }
-
-      .section {
-        padding: 32px 5%;
-      }
-
-      .categories,
-      .products {
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-      }
-
-      .category {
-        padding: 15px;
-      }
-
-      .product-image {
-        height: 155px;
-      }
-
-      .product-body {
-        padding: 13px;
-      }
-
-      .product h3 {
-        font-size: 15px;
-      }
-
-      .price {
-        font-size: 20px;
-      }
-
-      .request-banner {
-        margin: 0 5% 30px;
-        padding: 22px;
-      }
-    }
-
-    @media (max-width: 380px) {
-      .categories,
-      .products {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADI INTERNATIONAL | Catalogue</title>
+
+<style>
+:root {
+  --blue: #0756a5;
+  --dark: #06396d;
+  --yellow: #f5c400;
+  --white: #ffffff;
+  --light: #f3f6fa;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: var(--light);
+  color: #172b45;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+header {
+  background: var(--blue);
+  color: white;
+  padding: 18px 5%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  margin: 0 10px;
+  font-size: 14px;
+}
+
+nav a:hover {
+  color: var(--yellow);
+}
+
+/* BANNIERE ANIMEE */
+
+.ad-banner {
+  overflow: hidden;
+  background: var(--yellow);
+  color: var(--dark);
+  padding: 13px 0;
+  font-weight: bold;
+}
+
+.ad-track {
+  display: flex;
+  width: max-content;
+  animation: scrollBanner 24s linear infinite;
+}
+
+.ad-track span {
+  padding-right: 70px;
+  white-space: nowrap;
+}
+
+@keyframes scrollBanner {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.ad-banner:hover .ad-track {
+  animation-play-state: paused;
+}
+
+/* HERO */
+
+.hero {
+  background: linear-gradient(120deg, #06396d, #0875c9);
+  color: white;
+  text-align: center;
+  padding: 65px 20px;
+}
+
+.hero h1 {
+  font-size: 36px;
+  margin-bottom: 15px;
+  animation: fadeIn 1s ease;
+}
+
+.hero p {
+  font-size: 17px;
+  margin-bottom: 25px;
+}
+
+.hero-btn {
+  display: inline-block;
+  padding: 13px 25px;
+  background: var(--yellow);
+  color: var(--dark);
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: bold;
+  transition: .3s;
+}
+
+.hero-btn:hover {
+  transform: translateY(-3px);
+}
+
+/* CATALOGUE */
+
+.catalogue {
+  padding: 45px 5%;
+}
+
+.section-title {
+  text-align: center;
+  color: var(--blue);
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.section-subtitle {
+  text-align: center;
+  color: #64748b;
+  margin-bottom: 35px;
+}
+
+.products {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 24px;
+}
+
+.product-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 5px 20px rgba(0,0,0,.07);
+  transition: transform .3s, box-shadow .3s;
+  animation: fadeIn 0.8s ease both;
+}
+
+.product-card:hover {
+  transform: translateY(-7px);
+  box-shadow: 0 12px 25px rgba(0,0,0,.12);
+}
+
+.product-card img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+}
+
+.product-content {
+  padding: 18px;
+}
+
+.product-content h3 {
+  color: var(--blue);
+  margin-bottom: 10px;
+}
+
+.product-content p {
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 65px;
+}
+
+.price {
+  color: var(--blue);
+  font-size: 25px;
+  font-weight: bold;
+  margin: 15px 0;
+}
+
+.product-btn {
+  display: block;
+  text-align: center;
+  background: var(--blue);
+  color: white;
+  text-decoration: none;
+  padding: 12px;
+  border-radius: 8px;
+  transition: .3s;
+}
+
+.product-btn:hover {
+  background: var(--dark);
+}
+
+/* PUBLICITE */
+
+.ad-section {
+  margin: 10px 5% 45px;
+  border-radius: 16px;
+  background: linear-gradient(120deg, #0756a5, #092d52);
+  color: white;
+  overflow: hidden;
+  text-align: center;
+  padding: 35px 20px;
+}
+
+.ad-content {
+  animation: adPulse 4s ease-in-out infinite;
+}
+
+.ad-section h2 {
+  color: var(--yellow);
+  margin-bottom: 12px;
+}
+
+.ad-section p {
+  margin-bottom: 20px;
+}
+
+.ad-section a {
+  background: var(--yellow);
+  color: var(--dark);
+  padding: 12px 22px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+/* CONTACT */
+
+.contact {
+  padding: 45px 5%;
+  background: white;
+  text-align: center;
+}
+
+.contact h2 {
+  color: var(--blue);
+  margin-bottom: 15px;
+}
+
+.contact p {
+  margin-bottom: 20px;
+  color: #64748b;
+}
+
+.contact-box {
+  max-width: 500px;
+  margin: auto;
+}
+
+.contact-box input,
+.contact-box textarea {
+  width: 100%;
+  padding: 13px;
+  margin-bottom: 12px;
+  border: 1px solid #dbe5f0;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.contact-box button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  background: var(--blue);
+  color: white;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* FOOTER */
+
+footer {
+  background: #06396d;
+  color: white;
+  text-align: center;
+  padding: 25px 15px;
+  font-size: 14px;
+}
+
+footer span {
+  color: var(--yellow);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes adPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.025); }
+}
+
+/* TELEPHONE */
+
+@media(max-width:600px) {
+  header {
+    justify-content: center;
+    text-align: center;
+  }
+
+  nav {
+    width: 100%;
+  }
+
+  nav a {
+    display: inline-block;
+    margin: 7px;
+  }
+
+  .hero h1 {
+    font-size: 28px;
+  }
+}
+
+/* ACCESSIBILITE : REDUIRE LES ANIMATIONS */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+</style>
 </head>
 
 <body>
 
 <!-- HEADER -->
-<header class="topbar">
-  <a class="logo" href="#">ADI <span>INTERNATIONAL</span></a>
-
-  <nav class="nav">
-    <a href="#categories" data-fr="Catégories" data-en="Categories">Catégories</a>
-    <a href="#catalogue" data-fr="Catalogue" data-en="Catalog">Catalogue</a>
-    <a href="#request" data-fr="Demander un produit" data-en="Request a product">Demander un produit</a>
-    <a href="#advertising" data-fr="Publicité" data-en="Advertising">Publicité</a>
-    <a href="#contact" data-fr="Contact" data-en="Contact">Contact</a>
-    <button class="lang" id="lang">EN</button>
+<header>
+  <div class="logo">ADI INTERNATIONAL</div>
+  <nav>
+    <a href="#accueil">Accueil</a>
+    <a href="#catalogue">Catalogue</a>
+    <a href="#publicite">Publicité</a>
+    <a href="#contact">Contact</a>
   </nav>
 </header>
 
+<!-- PUBLICITE ANIMEE EN BANDEAU -->
+<div class="ad-banner">
+  <div class="ad-track">
+    <span>🌍 ADI INTERNATIONAL — Découvrez des produits du monde entier !</span>
+    <span>✨ Nouveautés • Prix attractifs • Demandes personnalisées</span>
+    <span>📢 Votre publicité peut apparaître ici — Contactez ADI</span>
+    <span>🌍 ADI INTERNATIONAL — Découvrez des produits du monde entier !</span>
+    <span>✨ Nouveautés • Prix attractifs • Demandes personnalisées</span>
+    <span>📢 Votre publicité peut apparaître ici — Contactez ADI</span>
+  </div>
+</div>
+
 <!-- HERO -->
-<section class="hero">
-  <div class="hero-content">
-    <div class="eyebrow"
-      data-fr="Découverte · Comparaison · International"
-      data-en="Discovery · Comparison · International">
-      Découverte · Comparaison · International
+<section class="hero" id="accueil">
+  <h1>Le commerce international, plus accessible.</h1>
+  <p>Découvrez, comparez et demandez vos produits à travers le monde.</p>
+  <a href="#catalogue" class="hero-btn">Découvrir le catalogue</a>
+</section>
+
+<!-- CATALOGUE -->
+<section class="catalogue" id="catalogue">
+  <h2 class="section-title">Notre catalogue</h2>
+  <p class="section-subtitle">Une sélection de produits internationaux</p>
+
+  <div class="products">
+
+    <!-- PRODUIT 1 -->
+    <div class="product-card">
+      <img src="https://images.unsplash.com/photo-1586319429488-2b4c8f5b6a12?auto=format&fit=crop&w=800&q=80"
+           alt="Support téléphone">
+      <div class="product-content">
+        <h3>Support téléphone universel</h3>
+        <p>Support pratique et ajustable pour téléphone. Idéal pour le bureau ou la maison.</p>
+        <div class="price">12,90 €</div>
+        <a class="product-btn" href="#contact">Demander ce produit</a>
+      </div>
     </div>
 
-    <h1 data-fr="Le commerce international, plus accessible."
-        data-en="International trade, made more accessible.">
-      Le commerce international, plus accessible.
-    </h1>
+    <!-- PRODUIT 2 -->
+    <div class="product-card">
+      <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80"
+           alt="Casque audio">
+      <div class="product-content">
+        <h3>Casque audio sans fil</h3>
+        <p>Casque audio pour écouter de la musique et profiter de vos contenus.</p>
+        <div class="price">29,90 €</div>
+        <a class="product-btn" href="#contact">Demander ce produit</a>
+      </div>
+    </div>
 
-    <p data-fr="Découvrez des produits du monde entier. Comparez les offres et demandez le produit qui vous intéresse à ADI INTERNATIONAL."
-       data-en="Discover products from around the world. Compare offers and request the products you are interested in from ADI INTERNATIONAL.">
-      Découvrez des produits du monde entier. Comparez les offres et demandez le produit qui vous intéresse à ADI INTERNATIONAL.
-    </p>
+    <!-- PRODUIT 3 -->
+    <div class="product-card">
+      <img src="https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=800&q=80"
+           alt="Lampe de bureau">
+      <div class="product-content">
+        <h3>Lampe de bureau LED</h3>
+        <p>Éclairage moderne pour bureau, espace de travail ou chambre.</p>
+        <div class="price">24,90 €</div>
+        <a class="product-btn" href="#contact">Demander ce produit</a>
+      </div>
+    </div>
 
-    <form class="search" id="searchForm">
-      <input
-        type="search"
-        id="searchInput"
-        placeholder="Que recherchez-vous aujourd'hui ?"
-        data-placeholder-fr="Que recherchez-vous aujourd'hui ?"
-        data-placeholder-en="What are you looking for today?"
-      >
-      <button class="btn" type="submit"
-        data-fr="Rechercher" data-en="Search">Rechercher</button>
+  </div>
+</section>
+
+<!-- BANNIERE PUBLICITAIRE -->
+<section class="ad-section" id="publicite">
+  <div class="ad-content">
+    <h2>Votre marque mérite d'être visible 🌍</h2>
+    <p>Promouvez votre entreprise, vos services ou vos produits sur ADI INTERNATIONAL.</p>
+    <a href="#contact">Demander un espace publicitaire</a>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact" id="contact">
+  <h2>Contact & Demande de produit</h2>
+  <p>Vous recherchez un produit ? Envoyez-nous votre demande.</p>
+
+  <div class="contact-box">
+    <form id="contactForm">
+      <input type="text" id="name" placeholder="Votre nom" required>
+      <input type="email" id="email" placeholder="Votre email" required>
+      <input type="text" id="product" placeholder="Produit recherché" required>
+      <textarea id="message" rows="4" placeholder="Votre message"></textarea>
+      <button type="submit">Envoyer ma demande</button>
     </form>
   </div>
 </section>
 
-<!-- CATEGORIES -->
-<section class="section" id="categories">
-  <div class="section-title">
-    <h2 data-fr="Explorez nos catégories" data-en="Explore our categories">Explorez nos catégories</h2>
-    <p data-fr="Une sélection de produits de différents univers."
-       data-en="A selection of products from different categories.">
-      Une sélection de produits de différents univers.
-    </p>
-  </div>
-
-  <div class="categories">
-    <a class="category" href="#catalogue">
-      <div class="emoji">📱</div>
-      <span data-fr="Électronique" data-en="Electronics">Électronique</span><br>
-      <small data-fr="Technologie & accessoires" data-en="Technology & accessories">Technologie & accessoires</small>
-    </a>
-
-    <a class="category" href="#catalogue">
-      <div class="emoji">🏠</div>
-      <span data-fr="Maison" data-en="Home">Maison</span><br>
-      <small data-fr="Équipement & décoration" data-en="Equipment & decoration">Équipement & décoration</small>
-    </a>
-
-    <a class="category" href="#catalogue">
-      <div class="emoji">👜</div>
-      <span data-fr="Mode" data-en="Fashion">Mode</span><br>
-      <small data-fr="Accessoires & tendances" data-en="Accessories & trends">Accessoires & tendances</small>
-    </a>
-
-    <a class="category" href="#catalogue">
-      <div class="emoji">🛠️</div>
-      <span data-fr="Équipements" data-en="Equipment">Équipements</span><br>
-      <small data-fr="Outils & matériel" data-en="Tools & materials">Outils & matériel</small>
-    </a>
-
-    <a class="category" href="#catalogue">
-      <div class="emoji">💄</div>
-      <span data-fr="Beauté" data-en="Beauty">Beauté</span><br>
-      <small data-fr="Produits & accessoires" data-en="Products & accessories">Produits & accessoires</small>
-    </a>
-
-    <a class="category" href="#catalogue">
-      <div class="emoji">⚽</div>
-      <span data-fr="Loisirs" data-en="Leisure">Loisirs</span><br>
-      <small data-fr="Sport & divertissement" data-en="Sports & entertainment">Sport & divertissement</small>
-    </a>
-
-    <a class="category" href="#catalogue">
-      <div class="emoji">🚗</div>
-      <span data-fr="Automobile" data-en="Automotive">Automobile</span><br>
-      <small data-fr="Accessoires auto" data-en="Car accessories">Accessoires auto</small>
-    </a>
-
-    <a class="category" href="#request">
-      <div class="emoji">🌍</div>
-      <span data-fr="Autres produits" data-en="Other products">Autres produits</span><br>
-      <small data-fr="Recherche personnalisée" data-en="Custom search">Recherche personnalisée</small>
-    </a>
-  </div>
-</section>
-
-<!-- CATALOGUE -->
-<section class="section" id="catalogue">
-  <div class="section-title">
-    <h2 data-fr="Catalogue ADI INTERNATIONAL" data-en="ADI INTERNATIONAL Catalog">Catalogue ADI INTERNATIONAL</h2>
-    <p data-fr="Découvrez nos produits sélectionnés à l'international."
-       data-en="Discover our selected international products.">
-      Découvrez nos produits sélectionnés à l'international.
-    </p>
-  </div>
-
-  <input
-    type="search"
-    class="catalog-search"
-    id="catalogSearch"
-    placeholder="🔎 Rechercher un produit dans le catalogue..."
-    data-placeholder-fr="🔎 Rechercher un produit dans le catalogue..."
-    data-placeholder-en="🔎 Search the catalog..."
-  >
-
-  <div class="products" id="productsGrid">
-
-    <!-- PRODUIT 1 -->
-    <article class="product" data-product="support téléphone universel phone holder smartphone electronics">
-      <div class="product-image">
-        <img
-          src="https://placehold.co/600x450/f0f4f9/0756a5?text=ADI+Phone+Holder"
-          alt="Support téléphone universel - image de démonstration"
-          loading="lazy"
-        >
-      </div>
-
-      <div class="product-body">
-        <span class="tag" data-fr="Électronique" data-en="Electronics">Électronique</span>
-
-<div class="product-card">
-  <img
-    src="https://images.unsplash.com/photo-1586319429488-2b4c8f5b6a12?auto=format&fit=crop&w=700&q=80"
-    alt="Support téléphone universel"
-    style="width:100%;height:220px;object-fit:cover;border-radius:12px;"
-  >
-
-  <h3>Support téléphone universel</h3>
-  <p>Support réglable pour smartphone, idéal pour bureau et maison.</p>
-
-  <p>Prix fournisseur : <strong>5,00 USD</strong></p>
-  <p>Prix ADI : <strong>5,99 €</strong></p>
-
-  <a href="https://www.alibaba.com/"
-     target="_blank"
-     style="display:inline-block;background:#0756a5;color:white;padding:10px 16px;border-radius:8px;text-decoration:none;">
-    Voir le fournisseur
-  </a>
-
-  <p style="font-size:12px;color:#777;">
-    Prix de démonstration — disponibilité et frais de livraison à confirmer.
-  </p>
-</div>
-
-
-        <a class="btn btn-blue" href="#request"
-           data-fr="Demander ce produit" data-en="Request this product">
-          Demander ce produit
-        </a>
-      </div>
-    </article>
-
-  </div>
-
-  <p id="catalogMessage"></p>
-</section>
-
-<!-- PRODUCT REQUEST -->
-<section class="request-banner" id="request">
-  <div>
-    <h2 data-fr="Vous cherchez un produit précis ?"
-        data-en="Looking for a specific product?">
-      Vous cherchez un produit précis ?
-    </h2>
-
-    <p data-fr="ADI recherche des offres auprès de fournisseurs internationaux."
-       data-en="ADI searches international suppliers for product offers.">
-      ADI recherche des offres auprès de fournisseurs internationaux.
-    </p>
-  </div>
-
-  <a class="btn" href="#contact"
-     data-fr="Faire une demande" data-en="Make a request">
-    Faire une demande
-  </a>
-</section>
-
-<!-- ADVERTISING -->
-<section class="section" id="advertising">
-  <div class="advertising">
-    <h2 data-fr="Espace publicité & partenaires"
-        data-en="Advertising & Partners">
-      Espace publicité & partenaires
-    </h2>
-
-    <p data-fr="Vous êtes une entreprise ou un fournisseur ? Présentez vos produits et services sur ADI INTERNATIONAL."
-       data-en="Are you a company or supplier? Present your products and services on ADI INTERNATIONAL.">
-      Vous êtes une entreprise ou un fournisseur ? Présentez vos produits et services sur ADI INTERNATIONAL.
-    </p>
-
-    <a class="btn btn-blue" href="#contact" style="margin-top:15px"
-       data-fr="Devenir partenaire" data-en="Become a partner">
-      Devenir partenaire
-    </a>
-  </div>
-</section>
-
-<!-- FEATURES -->
-<section class="section">
-  <div class="section-title">
-    <h2 data-fr="Pourquoi choisir ADI INTERNATIONAL ?"
-        data-en="Why choose ADI INTERNATIONAL?">
-      Pourquoi choisir ADI INTERNATIONAL ?
-    </h2>
-  </div>
-
-  <div class="features">
-    <div class="feature">
-      <h3 data-fr="🌍 Recherche internationale" data-en="🌍 International search">🌍 Recherche internationale</h3>
-      <p data-fr="Découvrez des produits et des offres provenant de différents marchés."
-         data-en="Discover products and offers from different markets.">
-        Découvrez des produits et des offres provenant de différents marchés.
-      </p>
-    </div>
-
-    <div class="feature">
-      <h3 data-fr="💶 Prix transparents" data-en="💶 Transparent pricing">💶 Prix transparents</h3>
-      <p data-fr="Des prix présentés clairement en euros, avec les frais à confirmer."
-         data-en="Prices displayed clearly in euros, with fees to be confirmed.">
-        Des prix présentés clairement en euros, avec les frais à confirmer.
-      </p>
-    </div>
-
-    <div class="feature">
-      <h3 data-fr="🤝 Validation humaine" data-en="🤝 Human approval">🤝 Validation humaine</h3>
-      <p data-fr="Chaque demande est vérifiée avant confirmation de commande auprès du fournisseur."
-         data-en="Every request is checked before an order is confirmed with the supplier.">
-        Chaque demande est vérifiée avant confirmation de commande auprès du fournisseur.
-      </p>
-    </div>
-  </div>
-</section>
-
 <!-- FOOTER -->
-<footer class="footer" id="contact">
-  <div class="logo">ADI INTERNATIONAL</div>
-
-  <p data-fr="Le commerce international, plus accessible."
-     data-en="International trade, made more accessible.">
-    Le commerce international, plus accessible.
-  </p>
-
-  <p data-fr="Demandes de produits · Fournisseurs · Publicité · Partenariats"
-     data-en="Product requests · Suppliers · Advertising · Partnerships">
-    Demandes de produits · Fournisseurs · Publicité · Partenariats
-  </p>
-
-  <p style="margin-top:15px">
-    © <span id="year"></span> ADI INTERNATIONAL
-  </p>
+<footer>
+  <p><span>ADI INTERNATIONAL</span> — Découverte · Comparaison · International</p>
+  <p>© <span id="year"></span> ADI INTERNATIONAL — Tous droits réservés</p>
 </footer>
 
 <script>
-  // Année automatique
-  document.getElementById("year").textContent = new Date().getFullYear();
+document.getElementById("year").textContent = new Date().getFullYear();
 
-  // RECHERCHE CATALOGUE
-  const searchForm = document.getElementById("searchForm");
-  const searchInput = document.getElementById("searchInput");
-  const catalogSearch = document.getElementById("catalogSearch");
-  const productsGrid = document.getElementById("productsGrid");
-  const catalogMessage = document.getElementById("catalogMessage");
+document.getElementById("contactForm").addEventListener("submit", function(e) {
+  e.preventDefault();
 
-  function searchProducts(query) {
-    const products = productsGrid.querySelectorAll(".product");
-    let count = 0;
+  alert("Votre formulaire est prêt. La fonction d'envoi doit être connectée à ADI INTERNATIONAL.");
 
-    products.forEach(product => {
-      const searchableText = (
-        product.textContent + " " +
-        (product.dataset.product || "")
-      ).toLowerCase();
-
-      const match = searchableText.includes(query.toLowerCase());
-
-      product.style.display = match ? "" : "none";
-
-      if (match) count++;
-    });
-
-    if (!query) {
-      catalogMessage.textContent = "";
-    } else if (count > 0) {
-      catalogMessage.textContent = count + " produit(s) trouvé(s).";
-    } else {
-      catalogMessage.textContent =
-        "Aucun produit trouvé. Vous pouvez demander ce produit à ADI.";
-    }
-  }
-
-  // Recherche depuis la bannière
-  searchForm.addEventListener("submit", function(event) {
-    event.preventDefault();
-
-    const query = searchInput.value.trim();
-    catalogSearch.value = query;
-
-    searchProducts(query);
-
-    document.getElementById("catalogue").scrollIntoView({
-      behavior: "smooth"
-    });
-  });
-
-  searchInput.addEventListener("input", function() {
-    catalogSearch.value = searchInput.value;
-    searchProducts(searchInput.value.trim());
-  });
-
-  // Recherche depuis le catalogue
-  catalogSearch.addEventListener("input", function() {
-    searchInput.value = catalogSearch.value;
-    searchProducts(catalogSearch.value.trim());
-  });
-
-  // LANGUE FR / EN
-  let currentLang = "fr";
-  const langButton = document.getElementById("lang");
-
-  langButton.addEventListener("click", function() {
-    currentLang = currentLang === "fr" ? "en" : "fr";
-
-    document.documentElement.lang = currentLang;
-    langButton.textContent = currentLang === "fr" ? "EN" : "FR";
-
-    document.querySelectorAll("[data-fr][data-en]").forEach(element => {
-      element.textContent = element.getAttribute("data-" + currentLang);
-    });
-
-    document.querySelectorAll("[data-placeholder-fr][data-placeholder-en]").forEach(element => {
-      element.placeholder = element.getAttribute("data-placeholder-" + currentLang);
-    });
-  });
-
-  // PRIX ADI : valeur de démonstration en EUR
-  // Les prix ne sont pas des offres fournisseur vérifiées.
-  // Les marges et taux pourront être ajustés plus tard.
+  this.reset();
+});
 </script>
 
 </body>
