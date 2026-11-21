@@ -441,25 +441,63 @@
 </footer>
 
 <script>
+  // Année automatique
   document.getElementById("year").textContent = new Date().getFullYear();
 
-  document.getElementById("searchForm").addEventListener("submit", function(e) {
-    e.preventDefault();
-    const query = document.getElementById("searchInput").value.trim();
+  // Recherche dans le catalogue ADI
+  const searchForm = document.getElementById("searchForm");
+  const searchInput = document.getElementById("searchInput");
+  const products = document.querySelectorAll(".product");
 
-    if (!query) {
-      alert("Veuillez saisir un produit à rechercher.");
-      return;
+  // Message de recherche
+  const searchMessage = document.createElement("p");
+  searchMessage.style.marginTop = "15px";
+  searchMessage.style.fontWeight = "bold";
+  searchMessage.style.color = "#0756a5";
+  searchMessage.id = "searchMessage";
+  document.getElementById("catalogue").appendChild(searchMessage);
+
+  function searchProducts(query) {
+    let count = 0;
+
+    products.forEach(product => {
+      const text = product.textContent.toLowerCase();
+      const match = text.includes(query.toLowerCase());
+
+      product.style.display = match ? "" : "none";
+
+      if (match) count++;
+    });
+
+    if (query === "") {
+      searchMessage.textContent = "";
+    } else if (count > 0) {
+      searchMessage.textContent = count + " produit(s) trouvé(s).";
+    } else {
+      searchMessage.textContent = "Aucun produit trouvé. Vous pouvez demander ce produit à ADI.";
     }
+  }
 
+  searchForm.addEventListener("submit", function(e) {
+    e.preventDefault();
+    searchProducts(searchInput.value.trim());
     document.getElementById("catalogue").scrollIntoView({ behavior: "smooth" });
-    alert("La recherche avancée sera connectée lors de la prochaine étape. Produit recherché : " + query);
   });
 
+  // Recherche en direct pendant la saisie
+  searchInput.addEventListener("input", function() {
+    searchProducts(searchInput.value.trim());
+  });
+
+  // Bouton langue (sera activé dans une prochaine étape)
   document.getElementById("lang").addEventListener("click", function() {
-    alert("La version anglaise sera activée dans la prochaine étape.");
+    alert("La version anglaise sera activée dans une prochaine étape.");
   });
 </script>
+</body>
+</html>
+
+
 
 </body>
 </html>
