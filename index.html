@@ -1,476 +1,167 @@
-
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ADI INTERNATIONAL | Catalogue</title>
-
-<style>
-:root {
-  --blue: #0756a5;
-  --dark: #06396d;
-  --yellow: #f5c400;
-  --white: #ffffff;
-  --light: #f3f6fa;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: Arial, sans-serif;
-  background: var(--light);
-  color: #172b45;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-header {
-  background: var(--blue);
-  color: white;
-  padding: 18px 5%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.logo {
-  font-size: 24px;
-  font-weight: bold;
-  letter-spacing: 1px;
-}
-
-nav a {
-  color: white;
-  text-decoration: none;
-  margin: 0 10px;
-  font-size: 14px;
-}
-
-nav a:hover {
-  color: var(--yellow);
-}
-
-/* BANNIERE ANIMEE */
-
-.ad-banner {
-  overflow: hidden;
-  background: var(--yellow);
-  color: var(--dark);
-  padding: 13px 0;
-  font-weight: bold;
-}
-
-.ad-track {
-  display: flex;
-  width: max-content;
-  animation: scrollBanner 24s linear infinite;
-}
-
-.ad-track span {
-  padding-right: 70px;
-  white-space: nowrap;
-}
-
-@keyframes scrollBanner {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
-
-.ad-banner:hover .ad-track {
-  animation-play-state: paused;
-}
-
-/* HERO */
-
-.hero {
-  background: linear-gradient(120deg, #06396d, #0875c9);
-  color: white;
-  text-align: center;
-  padding: 65px 20px;
-}
-
-.hero h1 {
-  font-size: 36px;
-  margin-bottom: 15px;
-  animation: fadeIn 1s ease;
-}
-
-.hero p {
-  font-size: 17px;
-  margin-bottom: 25px;
-}
-
-.hero-btn {
-  display: inline-block;
-  padding: 13px 25px;
-  background: var(--yellow);
-  color: var(--dark);
-  text-decoration: none;
-  border-radius: 8px;
-  font-weight: bold;
-  transition: .3s;
-}
-
-.hero-btn:hover {
-  transform: translateY(-3px);
-}
-
-/* CATALOGUE */
-
-.catalogue {
-  padding: 45px 5%;
-}
-
-.section-title {
-  text-align: center;
-  color: var(--blue);
-  font-size: 28px;
-  margin-bottom: 12px;
-}
-
-.section-subtitle {
-  text-align: center;
-  color: #64748b;
-  margin-bottom: 35px;
-}
-
-.products {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 24px;
-}
-
-.product-card {
-  background: white;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 5px 20px rgba(0,0,0,.07);
-  transition: transform .3s, box-shadow .3s;
-  animation: fadeIn 0.8s ease both;
-}
-
-.product-card:hover {
-  transform: translateY(-7px);
-  box-shadow: 0 12px 25px rgba(0,0,0,.12);
-}
-
-.product-card img {
-  width: 100%;
-  height: 220px;
-  object-fit: cover;
-  display: block;
-}
-
-.product-content {
-  padding: 18px;
-}
-
-.product-content h3 {
-  color: var(--blue);
-  margin-bottom: 10px;
-}
-
-.product-content p {
-  color: #64748b;
-  font-size: 14px;
-  line-height: 1.6;
-  min-height: 65px;
-}
-
-.price {
-  color: var(--blue);
-  font-size: 25px;
-  font-weight: bold;
-  margin: 15px 0;
-}
-
-.product-btn {
-  display: block;
-  text-align: center;
-  background: var(--blue);
-  color: white;
-  text-decoration: none;
-  padding: 12px;
-  border-radius: 8px;
-  transition: .3s;
-}
-
-.product-btn:hover {
-  background: var(--dark);
-}
-
-/* PUBLICITE */
-
-.ad-section {
-  margin: 10px 5% 45px;
-  border-radius: 16px;
-  background: linear-gradient(120deg, #0756a5, #092d52);
-  color: white;
-  overflow: hidden;
-  text-align: center;
-  padding: 35px 20px;
-}
-
-.ad-content {
-  animation: adPulse 4s ease-in-out infinite;
-}
-
-.ad-section h2 {
-  color: var(--yellow);
-  margin-bottom: 12px;
-}
-
-.ad-section p {
-  margin-bottom: 20px;
-}
-
-.ad-section a {
-  background: var(--yellow);
-  color: var(--dark);
-  padding: 12px 22px;
-  border-radius: 8px;
-  text-decoration: none;
-  font-weight: bold;
-}
-
-/* CONTACT */
-
-.contact {
-  padding: 45px 5%;
-  background: white;
-  text-align: center;
-}
-
-.contact h2 {
-  color: var(--blue);
-  margin-bottom: 15px;
-}
-
-.contact p {
-  margin-bottom: 20px;
-  color: #64748b;
-}
-
-.contact-box {
-  max-width: 500px;
-  margin: auto;
-}
-
-.contact-box input,
-.contact-box textarea {
-  width: 100%;
-  padding: 13px;
-  margin-bottom: 12px;
-  border: 1px solid #dbe5f0;
-  border-radius: 8px;
-  font-size: 15px;
-}
-
-.contact-box button {
-  width: 100%;
-  padding: 14px;
-  border: none;
-  background: var(--blue);
-  color: white;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-/* FOOTER */
-
-footer {
-  background: #06396d;
-  color: white;
-  text-align: center;
-  padding: 25px 15px;
-  font-size: 14px;
-}
-
-footer span {
-  color: var(--yellow);
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes adPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.025); }
-}
-
-/* TELEPHONE */
-
-@media(max-width:600px) {
-  header {
-    justify-content: center;
-    text-align: center;
-  }
-
-  nav {
-    width: 100%;
-  }
-
-  nav a {
-    display: inline-block;
-    margin: 7px;
-  }
-
-  .hero h1 {
-    font-size: 28px;
-  }
-}
-
-/* ACCESSIBILITE : REDUIRE LES ANIMATIONS */
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-</style>
-</head>
-
-<body>
-
-<!-- HEADER -->
-<header>
-  <div class="logo">ADI INTERNATIONAL</div>
-  <nav>
-    <a href="#accueil">Accueil</a>
-    <a href="#catalogue">Catalogue</a>
-    <a href="#publicite">Publicité</a>
-    <a href="#contact">Contact</a>
-  </nav>
-</header>
-
-<!-- PUBLICITE ANIMEE EN BANDEAU -->
-<div class="ad-banner">
-  <div class="ad-track">
-    <span>🌍 ADI INTERNATIONAL — Découvrez des produits du monde entier !</span>
-    <span>✨ Nouveautés • Prix attractifs • Demandes personnalisées</span>
-    <span>📢 Votre publicité peut apparaître ici — Contactez ADI</span>
-    <span>🌍 ADI INTERNATIONAL — Découvrez des produits du monde entier !</span>
-    <span>✨ Nouveautés • Prix attractifs • Demandes personnalisées</span>
-    <span>📢 Votre publicité peut apparaître ici — Contactez ADI</span>
-  </div>
-</div>
-
-<!-- HERO -->
-<section class="hero" id="accueil">
-  <h1>Le commerce international, plus accessible.</h1>
-  <p>Découvrez, comparez et demandez vos produits à travers le monde.</p>
-  <a href="#catalogue" class="hero-btn">Découvrir le catalogue</a>
-</section>
-
-<!-- CATALOGUE -->
-<section class="catalogue" id="catalogue">
-  <h2 class="section-title">Notre catalogue</h2>
-  <p class="section-subtitle">Une sélection de produits internationaux</p>
-
-  <div class="products">
-
-    <!-- PRODUIT 1 -->
-    <div class="product-card">
-      <img src="https://images.unsplash.com/photo-1586319429488-2b4c8f5b6a12?auto=format&fit=crop&w=800&q=80"
-           alt="Support téléphone">
-      <div class="product-content">
-        <h3>Support téléphone universel</h3>
-        <p>Support pratique et ajustable pour téléphone. Idéal pour le bureau ou la maison.</p>
-        <div class="price">12,90 €</div>
-        <a class="product-btn" href="#contact">Demander ce produit</a>
-      </div>
-    </div>
-
-    <!-- PRODUIT 2 -->
-    <div class="product-card">
-      <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80"
-           alt="Casque audio">
-      <div class="product-content">
-        <h3>Casque audio sans fil</h3>
-        <p>Casque audio pour écouter de la musique et profiter de vos contenus.</p>
-        <div class="price">29,90 €</div>
-        <a class="product-btn" href="#contact">Demander ce produit</a>
-      </div>
-    </div>
-
-    <!-- PRODUIT 3 -->
-    <div class="product-card">
-      <img src="https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=800&q=80"
-           alt="Lampe de bureau">
-      <div class="product-content">
-        <h3>Lampe de bureau LED</h3>
-        <p>Éclairage moderne pour bureau, espace de travail ou chambre.</p>
-        <div class="price">24,90 €</div>
-        <a class="product-btn" href="#contact">Demander ce produit</a>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<!-- BANNIERE PUBLICITAIRE -->
-<section class="ad-section" id="publicite">
-  <div class="ad-content">
-    <h2>Votre marque mérite d'être visible 🌍</h2>
-    <p>Promouvez votre entreprise, vos services ou vos produits sur ADI INTERNATIONAL.</p>
-    <a href="#contact">Demander un espace publicitaire</a>
-  </div>
-</section>
-
-<!-- CONTACT -->
-<section class="contact" id="contact">
-  <h2>Contact & Demande de produit</h2>
-  <p>Vous recherchez un produit ? Envoyez-nous votre demande.</p>
-
-  <div class="contact-box">
-    <form id="contactForm">
-      <input type="text" id="name" placeholder="Votre nom" required>
-      <input type="email" id="email" placeholder="Votre email" required>
-      <input type="text" id="product" placeholder="Produit recherché" required>
-      <textarea id="message" rows="4" placeholder="Votre message"></textarea>
-      <button type="submit">Envoyer ma demande</button>
-    </form>
-  </div>
-</section>
-
-<!-- FOOTER -->
-<footer>
-  <p><span>ADI INTERNATIONAL</span> — Découverte · Comparaison · International</p>
-  <p>© <span id="year"></span> ADI INTERNATIONAL — Tous droits réservés</p>
+ADI INTERNATIONAL
+</span>
 </footer>
 
 <script>
-document.getElementById("year").textContent = new Date().getFullYear();
+/* GLOBE ANIMATION */
+const globe = document.querySelector(".globe");
 
-document.getElementById("contactForm").addEventListener("submit", function(e) {
-  e.preventDefault();
+if(globe){
+  globe.addEventListener("mousemove", e => {
+    const r = globe.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width;
+    const y = (e.clientY - r.top) / r.height;
 
-  alert("Votre formulaire est prêt. La fonction d'envoi doit être connectée à ADI INTERNATIONAL.");
+    globe.style.transform =
+      `rotateY(${(x-.5)*20}deg) rotateX(${(.5-y)*20}deg)`;
+  });
 
-  this.reset();
+  globe.addEventListener("mouseleave", () => {
+    globe.style.transform = "";
+  });
+}
+
+/* LANGUAGE */
+let currentLang = "fr";
+
+function toggleLang(){
+  currentLang = currentLang === "fr" ? "en" : "fr";
+
+  document.querySelectorAll("[data-fr][data-en]").forEach(el=>{
+    el.textContent = el.getAttribute("data-"+currentLang);
+  });
+
+  const btn = document.querySelector(".lang");
+  if(btn) btn.textContent = currentLang === "fr" ? "EN" : "FR";
+
+  document.documentElement.lang = currentLang;
+}
+
+/* REQUEST FORM */
+const form = document.getElementById("requestForm");
+
+if(form){
+  form.addEventListener("submit",function(e){
+    e.preventDefault();
+
+    const msg = document.getElementById("formMessage");
+    if(msg){
+      msg.textContent =
+        currentLang === "fr"
+        ? "Votre demande est préparée. Connectez votre système de réception pour l'envoyer."
+        : "Your request is ready. Connect your receiving system to send it.";
+    }
+
+    form.reset();
+  });
+}
+
+/* YEAR */
+const year = document.getElementById("year");
+if(year) year.textContent = new Date().getFullYear();
+
+/* SCROLL REVEAL */
+const observer = new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      entry.target.classList.add("visible");
+    }
+  });
+},{threshold:0.12});
+
+document.querySelectorAll(".product,.category,.ad-box").forEach(el=>{
+  el.classList.add("reveal");
+  observer.observe(el);
 });
 </script>
+
+<style>
+/* ANIMATIONS */
+@keyframes globeFloat{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-12px)}
+}
+
+@keyframes spin{
+  from{transform:rotate(0deg)}
+  to{transform:rotate(360deg)}
+}
+
+@keyframes orbit{
+  from{transform:rotate(-25deg)}
+  to{transform:rotate(335deg)}
+}
+
+@keyframes ring{
+  from{transform:rotate(0deg)}
+  to{transform:rotate(360deg)}
+}
+
+@keyframes pulse{
+  0%,100%{box-shadow:0 0 0 0 #f5c40050}
+  50%{box-shadow:0 0 0 10px #f5c40000}
+}
+
+.reveal{
+  opacity:0;
+  transform:translateY(25px);
+  transition:opacity .7s,transform .7s;
+}
+
+.reveal.visible{
+  opacity:1;
+  transform:translateY(0);
+}
+
+/* MOBILE */
+@media(max-width:850px){
+  .hero{
+    flex-direction:column;
+    text-align:center;
+    padding-top:55px;
+  }
+
+  .hero-text{margin:auto}
+
+  .hero-buttons{justify-content:center}
+
+  .globe-wrap{
+    margin-top:25px;
+    transform:scale(.9);
+  }
+
+  nav{
+    justify-content:center;
+  }
+
+  nav ul{
+    justify-content:center;
+  }
+
+  .promo{
+    flex-direction:column;
+    text-align:center;
+  }
+}
+
+@media(max-width:500px){
+  nav ul{gap:12px}
+  nav a{font-size:12px}
+
+  .hero h1{font-size:40px}
+
+  .globe-wrap{
+    transform:scale(.78);
+    margin:-20px 0;
+  }
+
+  section{padding:55px 5%}
+
+  .request{padding:22px}
+
+  .promo{margin:0 5%;padding:25px}
+}
+</style>
 
 </body>
 </html>
