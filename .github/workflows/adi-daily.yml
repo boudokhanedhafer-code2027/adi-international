@@ -1,11 +1,9 @@
 
-name: ADI INTERNATIONAL - Daily Supplier Report
+name: ADI INTERNATIONAL - Daily Supplier Research
 
 on:
   schedule:
-    # Every day at 06:00 UTC (07:00 in Tunisia)
     - cron: "0 6 * * *"
-
   workflow_dispatch:
 
 permissions:
@@ -13,11 +11,10 @@ permissions:
 
 jobs:
   adi-daily-report:
-    name: Daily ADI Product Research
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download ADI repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -25,20 +22,15 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Start ADI supplier research
-        run: |
-          mkdir -p reports
-          echo "ADI INTERNATIONAL" > reports/daily-report.txt
-          echo "Daily supplier research" >> reports/daily-report.txt
-          echo "Date: $(date -u)" >> reports/daily-report.txt
-          echo "" >> reports/daily-report.txt
-          echo "Research workflow started." >> reports/daily-report.txt
-          echo "Supplier data connector not configured yet." >> reports/daily-report.txt
-          echo "No automatic purchase or publication." >> reports/daily-report.txt
+      - name: Run ADI product research
+        env:
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+        run: python adi_research.py
 
-      - name: Save daily report
+      - name: Upload daily research report
         uses: actions/upload-artifact@v4
         with:
           name: ADI-Daily-Report
-          path: reports/daily-report.txt
+          path: reports/daily-report.md
           retention-days: 30
+
