@@ -1,0 +1,33 @@
+name: ADI INTERNATIONAL - V3 Manual Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  adi-v3-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run ADI Research V3
+        env:
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+        run: python adi_research_v3.py
+
+      - name: Upload V3 test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ADI-V3-Test-Report
+          path: reports/daily-report-v3.md
+          retention-days: 30
+          if-no-files-found: error
