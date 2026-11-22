@@ -1,249 +1,144 @@
-
-import os
-import json
-import re
-import urllib.request
-import urllib.parse
+#!/usr/bin/env python3
+"""ADI INTERNATIONAL Product Finder V2 — research only, no buying/publication."""
+import os, re, json, html, urllib.parse, urllib.request, urllib.error
 from datetime import datetime, timezone
+from pathlib import Path
 
-API_KEY = os.environ.get("TAVILY_API_KEY")
-REPORT_DIR = "reports"
-REPORT_FILE = os.path.join(REPORT_DIR, "daily-report.md")
-MAX_RESULTS_PER_SEARCH = 5
-MAX_REPORT_ITEMS = 25
+API_KEY = os.getenv("TAVILY_API_KEY", "").strip()
+REPORT_DIR = Path("reports")
+REPORT_DIR.mkdir(exist_ok=True)
+MAX_PER_CATEGORY = 5
+CATEGORIES = {
+    "Maison": ["wholesale home organization storage products price product page", "home storage organizer wholesale product price"],
+    "Cuisine": ["wholesale kitchen gadgets utensils individual products price", "kitchen accessories wholesale product price"],
+    "Electronique": ["wholesale consumer electronics accessories product price", "phone accessories wholesale product listing price"],
+    "Auto": ["wholesale car accessories individual product price", "automotive accessories supplier product listing"],
+    "Mode": ["wholesale travel bags backpacks accessories product price", "wholesale fashion accessories product listing price"],
+    "Loisirs": ["wholesale camping outdoor leisure products product price", "outdoor travel gadgets wholesale product listing"],
+}
+PRICE_RE = re.compile(r"(?:\$|USD\s?|US\$\s?|€|EUR\s?|£|GBP\s?|CNY\s?|RMB\s?|\bAED\s?)(\d{1,5}(?:[.,]\d{1,2})?)|\b(\d{1,5}(?:[.,]\d{1,2})?)\s?(?:USD|EUR|GBP|AED|CNY|RMB)\b", re.I)
 
-SEARCHES = [
-    ("Maison", "useful innovative home organization products wholesale suppliers"),
-    ("Cuisine", "practical kitchen accessories wholesale suppliers new products"),
-    ("Electronique", "useful electronic accessories wholesale supplier"),
-    ("Auto", "automotive accessories everyday products wholesale suppliers"),
-    ("Mode", "fashion bags travel accessories wholesale supplier products"),
-    ("Loisirs", "travel outdoor leisure accessories wholesale suppliers"),
-]
-
-def clean_text(value, limit=1200):
-    value = str(value or "")
-    value = re.sub(r"<[^>]*>", " ", value)
-    value = value.replace("|", "/")
-    value = re.sub(r"[\r\n\t]+", " ", value)
-    value = re.sub(r"\s+", " ", value)
-    return value.strip()[:limit]
-
-def normalize_url(url):
-    try:
-        parts = urllib.parse.urlsplit(url)
-        if not parts.netloc:
-            return url.strip().lower()
-        return (
-            parts.scheme.lower() + "://" +
-            parts.netloc.lower() +
-            parts.path.rstrip("/")
-        )
-    except Exception:
-        return url.strip().lower()
-
-def get_domain(url):
-    try:
-        return urllib.parse.urlparse(url).netloc.lower()
-    except Exception:
-        return "Unknown source"
-
-def detect_price(text):
-    patterns = [
-        r"(?:USD|US\$|\$)\s?\d+(?:[.,]\d{1,2})?",
-        r"\d+(?:[.,]\d{1,2})?\s?(?:USD|US dollars)",
-        r"(?:EUR|€)\s?\d+(?:[.,]\d{1,2})?",
-        r"\d+(?:[.,]\d{1,2})?\s?(?:EUR|€)",
-        r"(?:CNY|RMB|¥)\s?\d+(?:[.,]\d{1,2})?",
-        r"\d+(?:[.,]\d{1,2})?\s?(?:CNY|RMB)",
-        r"(?:GBP|£)\s?\d+(?:[.,]\d{1,2})?",
-        r"\d+(?:[.,]\d{1,2})?\s?(?:GBP|£)",
-    ]
-
-    for pattern in patterns:
-        match = re.search(pattern, text, re.IGNORECASE)
-        if match:
-            return match.group(0)
-
-    return "No price mention detected"
-
-def research_score(item):
-    try:
-        relevance = float(item.get("score", 0))
-    except (TypeError, ValueError):
-        relevance = 0
-
-    relevance = max(0, min(1, relevance))
-    score = int(relevance * 100)
-
-    if item.get("title"):
-        score += 3
-    if item.get("url"):
-        score += 2
-
-    return min(score, 100)
 
 def tavily_search(query):
-    if not API_KEY:
-        raise RuntimeError("TAVILY_API_KEY is missing")
+    payload = json.dumps({"query": query, "search_depth": "advanced", "max_results": 8, "include_images": True}).encode()
+    req = urllib.request.Request("https://api.tavily.com/search", data=payload,
+                               headers={"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"}, method="POST")
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        return json.loads(resp.read().decode("utf-8"))
 
-    payload = {
-        "api_key": API_KEY,
-        "query": query,
-        "search_depth": "basic",
-        "max_results": MAX_RESULTS_PER_SEARCH,
-        "include_answer": False,
-    }
 
-    request_data = json.dumps(payload).encode("utf-8")
+def get_price_mentions(text):
+    matches = []
+    for m in PRICE_RE.finditer(text or ""):
+        matches.append(m.group(0).strip())
+    return list(dict.fromkeys(matches))[:5]
 
-    request = urllib.request.Request(
-        "https://api.tavily.com/search",
-        data=request_data,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
 
-    with urllib.request.urlopen(request, timeout=40) as response:
-        return json.loads(response.read().decode("utf-8"))
+def fetch_meta_image(url):
+    """Try to read a page's OpenGraph image; best-effort, bounded request."""
+    try:
+        parsed = urllib.parse.urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            return ""
+        req = urllib.request.Request(url, headers={"User-Agent": "ADI-ResearchBot/1.0 (metadata preview)"})
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            if "text/html" not in resp.headers.get("Content-Type", ""):
+                return ""
+            raw = resp.read(250_000).decode("utf-8", "ignore")
+        for pattern in [
+            r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)',
+            r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']',
+            r'<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)',
+        ]:
+            m = re.search(pattern, raw, re.I)
+            if m:
+                return urllib.parse.urljoin(url, html.unescape(m.group(1)))
+    except Exception:
+        pass
+    return ""
+
+
+def normalize_title(title):
+    return re.sub(r"[^a-z0-9]+", " ", (title or "").lower()).strip()
+
+
+def markdown_escape(text):
+    return (text or "").replace("|", "\\|").replace("\n", " ").strip()
+
 
 def main():
-    os.makedirs(REPORT_DIR, exist_ok=True)
+    if not API_KEY:
+        raise SystemExit("Missing TAVILY_API_KEY environment secret")
+    collected, seen_urls, seen_titles, errors = [], set(), set(), []
+    image_cache = {}
+    for category, queries in CATEGORIES.items():
+        category_results = []
+        for query in queries:
+            try:
+                data = tavily_search(query)
+                for item in data.get("results", []):
+                    url = (item.get("url") or "").strip()
+                    title = (item.get("title") or "Untitled product/source").strip()
+                    snippet = (item.get("content") or "").strip()
+                    if not url or url in seen_urls:
+                        continue
+                    norm = normalize_title(title)
+                    if norm and norm in seen_titles:
+                        continue
+                    seen_urls.add(url)
+                    if norm:
+                        seen_titles.add(norm)
+                    price_mentions = get_price_mentions(title + " " + snippet)
+                    image = ""
+                    if item.get("images"):
+                        image = item["images"][0] if isinstance(item["images"], list) else ""
+                    if not image:
+                        image = image_cache.get(url, "")
+                        if not image:
+                            image = fetch_meta_image(url)
+                            image_cache[url] = image
+                    category_results.append({"category": category, "title": title, "url": url,
+                                          "snippet": snippet, "score": item.get("score"),
+                                          "prices": price_mentions, "image": image})
+            except Exception as exc:
+                errors.append(f"{category} / {query}: {exc}")
+        category_results.sort(key=lambda r: (bool(r["prices"]), r["score"] or 0), reverse=True)
+        collected.extend(category_results[:MAX_PER_CATEGORY])
 
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-
+    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     report = [
-        "# ADI INTERNATIONAL",
-        "## Daily Product & Supplier Research",
-        f"**Report date:** {now}",
-        "",
-        "> Research report only. Prices, stock, shipping and supplier details "
-        "require manual verification.",
-        "> No automatic purchase or publication.",
-        "",
-        "## Research rules",
-        "- Source links are provided for manual checking.",
-        "- Price mentions are extracted from search snippets only.",
-        "- Shipping, taxes, delivery and stock are not verified.",
-        "- Research score measures search relevance, not profit.",
-        "",
+        "# ADI INTERNATIONAL", "## Daily Product & Supplier Research V2", f"**Report date:** {stamp}",
+        "Research only. No automatic purchases or publications.", "",
+        "### V2 rules", "- Prioritize specific product pages over supplier/category landing pages.",
+        "- Price mentions come from search/page text and are not independently confirmed.",
+        "- Images are page metadata/search-provided and may need visual/manual validation.",
+        "- Shipping, taxes, delivery, stock, exact variant and MOQ require manual verification.",
+        "- Research score indicates search relevance, not profit.", "- EUR resale calculation remains pending until landed costs and margin settings are confirmed.", ""
     ]
-
-    all_results = []
-    seen = set()
-    errors = []
-
-    for category, query in SEARCHES:
-        try:
-            data = tavily_search(query)
-            results = data.get("results", [])
-
-            for item in results:
-                title = clean_text(item.get("title", "Untitled"), 200)
-                url = item.get("url", "")
-                content = clean_text(
-                    item.get("content", "No description available.")
-                )
-
-                if not url:
-                    continue
-
-                key = normalize_url(url)
-                title_key = title.lower()
-
-                if key in seen or title_key in seen:
-                    continue
-
-                seen.add(key)
-                seen.add(title_key)
-
-                all_results.append({
-                    "category": category,
-                    "title": title,
-                    "url": url,
-                    "domain": get_domain(url),
-                    "content": content,
-                    "price": detect_price(content),
-                    "score": research_score(item),
-                })
-
-        except Exception as error:
-            errors.append(f"{category}: {clean_text(error, 300)}")
-
-    all_results.sort(key=lambda x: x["score"], reverse=True)
-    selected = all_results[:MAX_REPORT_ITEMS]
-
-    for category, _ in SEARCHES:
-        category_items = [
-            item for item in selected
-            if item["category"] == category
-        ]
-
-        report += [
-            "---",
-            f"## Category: {category}",
-            "",
-        ]
-
-        if not category_items:
-            report += ["No results retained for this category.", ""]
+    for category in CATEGORIES:
+        report.append(f"### Category: {category}")
+        items = [r for r in collected if r["category"] == category]
+        if not items:
+            report.append("No results collected for this category.\n")
             continue
-
-        for item in category_items:
-            report += [
-                f"### {item['title']}",
-                f"**Source:** [{item['domain']}]({item['url']})",
-                f"**Research score:** {item['score']}/100",
-                f"**Price mention:** {item['price']}",
-                "",
-                item["content"] or "No description available.",
-                "",
-                "**Supplier price:** Not verified",
-                "**Shipping cost:** Not verified",
-                "**Taxes/customs:** Not verified",
-                "**Stock:** Not verified",
-                "**Delivery time:** Not verified",
-                "**ADI sale price (EUR):** Pending verification",
-                "**Decision:** Manual review required",
-                "",
-            ]
-
-    report += [
-        "---",
-        "## Daily Summary",
-        f"- Unique results collected: {len(all_results)}",
-        f"- Results displayed: {len(selected)}",
-        f"- Categories searched: {len(SEARCHES)}",
-        "- Duplicate results removed: Yes",
-        "- Supplier prices independently verified: No",
-        "- Shipping verified: No",
-        "- Stock verified: No",
-        "- Automatic purchase: Disabled",
-        "- Automatic publication: Disabled",
-        "",
-    ]
-
+        for r in items:
+            report += [f"**{markdown_escape(r['title'])}**", f"Source: {r['url']}"]
+            report.append(f"Research score: {round((r['score'] or 0) * 100)} / 100" if isinstance(r["score"], (int,float)) else "Research score: unavailable")
+            report.append("Price mention: " + (", ".join(r["prices"]) if r["prices"] else "None detected"))
+            report.append("Product image: " + (r["image"] if r["image"] else "Not found"))
+            if r["snippet"]:
+                report.append("Snippet: " + markdown_escape(r["snippet"][:900]))
+            report += ["Supplier price: not verified | Shipping: not verified | Taxes/customs: not verified | Stock: not verified | Delivery: not verified",
+                       "ADI sale price (EUR): pending verification | Decision: manual review", ""]
+    report += ["## Summary", f"Results collected: {len(collected)}", f"Categories searched: {len(CATEGORIES)}",
+               "Duplicates removed: yes", "Supplier prices independently verified: no", "Shipping/stock/taxes verified: no",
+               "Automatic purchase: disabled", "Automatic publication: disabled", "",
+               "## Next step", "Manually verify exact product/variant, supplier price, MOQ, stock, destination shipping, taxes/fees and delivery before calculating resale price."]
     if errors:
-        report += ["## Search warnings", ""]
-        for error in errors:
-            report.append(f"- {error}")
-        report.append("")
-
-    report += [
-        "## Next step",
-        "Manually verify the original source, exact product/variant, "
-        "supplier price, MOQ, stock, shipping to destination, fees and "
-        "delivery estimate before calculating an ADI resale price.",
-        "",
-    ]
-
-    with open(REPORT_FILE, "w", encoding="utf-8") as file:
-        file.write("\n".join(report))
-
-    print("ADI report generated:", REPORT_FILE)
-    print("Unique results collected:", len(all_results))
-    print("Results displayed:", len(selected))
-    print("Search errors:", len(errors))
+        report += ["", "## Search errors"] + [f"- {e}" for e in errors]
+    filename = REPORT_DIR / "daily-report.md"
+    filename.write_text("\n".join(report), encoding="utf-8")
+    print(f"Report saved: {filename} | results={len(collected)} | errors={len(errors)}")
 
 if __name__ == "__main__":
     main()
