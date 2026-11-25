@@ -542,6 +542,26 @@ footer a:hover{color:var(--yellow)}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;scroll-behavior:auto!important}
 }
+
+/* DRAFT CATALOGUE */
+.draft-section{background:#f5f9ff}
+.draft-notice{max-width:1000px;margin:0 auto 20px;padding:14px 18px;border:1px solid #e8c96a;border-radius:12px;background:#fff8df;color:#654c00;text-align:center;font-size:13px;line-height:1.6;font-weight:bold}
+.draft-controls{max-width:1000px;margin:0 auto 15px;display:grid;grid-template-columns:2fr 1fr;gap:12px}
+.draft-controls input,.draft-controls select{width:100%;padding:13px;border:1px solid #d5e1ee;border-radius:10px;background:#fff;font:inherit;color:#183553}
+.draft-count{text-align:center;color:#536d86;font-size:13px;margin:10px 0 18px}
+.draft-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.draft-card{background:#fff;border:1px solid #dfe9f4;border-radius:14px;padding:16px;min-width:0}
+.draft-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.draft-id{font-size:11px;color:#70859b;font-weight:bold}
+.draft-status{font-size:10px;font-weight:bold;color:#765600;background:#fff1c7;border-radius:20px;padding:5px 8px}
+.draft-card h3{font-size:15px;line-height:1.4;color:#164979}
+.draft-card p{font-size:12px;line-height:1.6;color:#71849a;margin-top:8px}
+.draft-category{font-size:11px!important;color:#0875df!important;font-weight:bold}
+.draft-price{margin-top:12px;padding-top:10px;border-top:1px solid #edf1f6;font-size:12px;color:#647b91}
+.draft-error{text-align:center;color:#9b3030;margin:20px}
+@media(max-width:900px){.draft-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:650px){.draft-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.draft-card{padding:12px}.draft-card h3{font-size:13px}.draft-controls{grid-template-columns:1fr}}
+
 </style>
 </head>
 
@@ -556,6 +576,7 @@ footer a:hover{color:var(--yellow)}
   <nav>
     <a href="#home" data-fr="Accueil" data-en="Home">Accueil</a>
     <a href="#catalogue" data-fr="Catalogue" data-en="Catalog">Catalogue</a>
+    <a href="#catalogue-preparation" data-fr="100 articles" data-en="100 items">100 articles</a>
     <a href="#categories" data-fr="Catégories" data-en="Categories">Catégories</a>
     <a href="#request" data-fr="Demande" data-en="Request">Demande</a>
     <a href="#advert" data-fr="Publicité" data-en="Advertising">Publicité</a>
@@ -691,6 +712,25 @@ footer a:hover{color:var(--yellow)}
      data-en="Products and prices shown for demonstration purposes.">Produits et prix affichés à titre de démonstration.</p>
 </section>
 
+<!-- PREPARATION CATALOGUE: 100 DRAFT ITEMS -->
+<section class="content-section draft-section" id="catalogue-preparation">
+  <div class="heading">
+    <h2 data-fr="100 articles en <span>préparation</span>" data-en="100 items in <span>preparation</span>">100 articles en préparation</h2>
+    <p data-fr="Parcourez les idées de produits préparées pour ADI INTERNATIONAL. Ces fiches ne sont pas des offres disponibles à la vente." data-en="Browse product ideas prepared for ADI INTERNATIONAL. These records are not offers available for sale.">Parcourez les idées de produits préparées pour ADI INTERNATIONAL. Ces fiches ne sont pas des offres disponibles à la vente.</p>
+  </div>
+  <div class="draft-notice" data-fr="BROUILLON — fournisseurs, prix, images, stock et livraison à vérifier. Aucune publication ni commande automatique." data-en="DRAFT — suppliers, prices, images, stock and shipping must be checked. No automatic publication or ordering.">BROUILLON — fournisseurs, prix, images, stock et livraison à vérifier. Aucune publication ni commande automatique.</div>
+  <div class="draft-controls">
+    <input id="draftSearch" type="search" placeholder="Rechercher un article / Search items" aria-label="Rechercher un article">
+    <select id="draftCategory" aria-label="Filtrer par catégorie">
+      <option value="" data-fr="Toutes les catégories" data-en="All categories">Toutes les catégories</option>
+    </select>
+  </div>
+  <p class="draft-count" id="draftCount" aria-live="polite">Chargement des 100 fiches…</p>
+  <div class="draft-grid" id="draftGrid" aria-live="polite"></div>
+  <p class="draft-error" id="draftError" hidden data-fr="Le catalogue préparatoire n'a pas pu être chargé. Réessayez plus tard." data-en="The draft catalog could not be loaded. Please try again later.">Le catalogue préparatoire n'a pas pu être chargé. Réessayez plus tard.</p>
+  <p class="note" data-fr="Les prix de vente en euros seront calculés seulement après vérification du prix fournisseur, des frais de livraison, des frais éventuels et de la marge." data-en="EUR selling prices will be calculated only after supplier price, shipping, possible fees and margin have been verified.">Les prix de vente en euros seront calculés seulement après vérification du prix fournisseur, des frais de livraison, des frais éventuels et de la marge.</p>
+</section>
+
 <!-- CATEGORIES -->
 <section class="content-section" id="categories">
   <div class="heading">
@@ -818,6 +858,60 @@ function toggleLang(){
   });
 
   document.getElementById("lang").textContent=lang==="fr"?"EN":"FR";
+  renderDraftCatalogue();
+}
+
+let draftProducts=[];
+function renderDraftCatalogue(){
+  const grid=document.getElementById("draftGrid");
+  if(!grid || !draftProducts.length) return;
+  const term=(document.getElementById("draftSearch").value||"").trim().toLocaleLowerCase();
+  const category=document.getElementById("draftCategory").value;
+  const filtered=draftProducts.filter(p=>{
+    const name=lang==="fr"?p.name_fr:p.name_en;
+    const desc=lang==="fr"?p.description_fr:p.description_en;
+    const cat=lang==="fr"?p.category_fr:p.category_en;
+    return (!category || p.category_fr===category) &&
+      (!term || (name+" "+desc+" "+cat+" "+p.id).toLocaleLowerCase().includes(term));
+  });
+  grid.replaceChildren();
+  filtered.forEach(p=>{
+    const card=document.createElement("article");
+    card.className="draft-card";
+    const top=document.createElement("div");top.className="draft-card-top";
+    const id=document.createElement("span");id.className="draft-id";id.textContent=p.id;
+    const status=document.createElement("span");status.className="draft-status";status.textContent=lang==="fr"?"BROUILLON":"DRAFT";
+    top.append(id,status);
+    const cat=document.createElement("p");cat.className="draft-category";cat.textContent=lang==="fr"?p.category_fr:p.category_en;
+    const title=document.createElement("h3");title.textContent=lang==="fr"?p.name_fr:p.name_en;
+    const desc=document.createElement("p");desc.textContent=lang==="fr"?p.description_fr:p.description_en;
+    const price=document.createElement("div");price.className="draft-price";price.textContent=lang==="fr"?"Prix : à vérifier":"Price: to be verified";
+    card.append(top,cat,title,desc,price);grid.append(card);
+  });
+  document.getElementById("draftCount").textContent=lang==="fr"
+    ? filtered.length+" article(s) affiché(s) sur "+draftProducts.length
+    : filtered.length+" item(s) shown out of "+draftProducts.length;
+}
+
+async function loadDraftCatalogue(){
+  try{
+    const response=await fetch("./catalogue-brouillon-100.json");
+    if(!response.ok) throw new Error("Catalogue unavailable");
+    const data=await response.json();
+    if(!Array.isArray(data.products)) throw new Error("Invalid catalog data");
+    draftProducts=data.products;
+    const select=document.getElementById("draftCategory");
+    [...new Set(draftProducts.map(p=>p.category_fr))].forEach(cat=>{
+      const option=document.createElement("option");option.value=cat;
+      const match=draftProducts.find(p=>p.category_fr===cat);
+      option.textContent=lang==="fr"?cat:match.category_en;
+      select.append(option);
+    });
+    renderDraftCatalogue();
+  }catch(error){
+    document.getElementById("draftCount").textContent="";
+    document.getElementById("draftError").hidden=false;
+  }
 }
 
 function filterCatalog(){
@@ -838,6 +932,9 @@ function askProduct(productName){
 }
 
 document.getElementById("year").textContent=new Date().getFullYear();
+document.getElementById("draftSearch").addEventListener("input",renderDraftCatalogue);
+document.getElementById("draftCategory").addEventListener("change",renderDraftCatalogue);
+loadDraftCatalogue();
 filterCatalog();
 
 document.getElementById("productForm").addEventListener("submit",function(e){
