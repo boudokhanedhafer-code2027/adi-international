@@ -337,6 +337,28 @@ section.content-section{padding:65px 5%}
   margin-top:18px;
 }
 
+.price-banner{
+  margin:0 0 28px;
+  padding:26px 18px;
+  text-align:center;
+  color:#fff;
+  border-radius:18px;
+  background:linear-gradient(110deg,#031936,#0756a5);
+}
+.price-banner h3{
+  color:#ffcc00;
+  font-size:clamp(22px,4vw,32px);
+  margin-bottom:8px;
+}
+.price-banner p{color:#fff;line-height:1.6}
+.shipping{
+  margin-top:-7px;
+  margin-bottom:14px;
+  color:#647b91;
+  font-size:13px;
+}
+.card[hidden]{display:none!important}
+
 /* CATEGORIES */
 .categories{
   display:grid;
@@ -588,9 +610,15 @@ footer a:hover{color:var(--yellow)}
        data-en="Discover our product selection.">Découvrez notre sélection de produits.</p>
   </div>
 
+  <div class="price-banner" role="note">
+    <h3 data-fr="🔥 TOUS NOS ARTICLES À MOINS DE 50 €" data-en="🔥 ALL OUR PRODUCTS UNDER €50">🔥 TOUS NOS ARTICLES À MOINS DE 50 €</h3>
+    <p data-fr="Prix du produit affiché séparément. Livraison à confirmer selon le fournisseur et la destination." data-en="Product price shown separately. Shipping to be confirmed according to supplier and destination.">Prix du produit affiché séparément. Livraison à confirmer selon le fournisseur et la destination.</p>
+    <p data-fr="Tout article fournisseur doit être vérifié et approuvé par ADI avant publication. Aucun achat fournisseur ni dépense automatique." data-en="Every supplier item must be verified and approved by ADI before publication. No automatic supplier purchase or spending.">Tout article fournisseur doit être vérifié et approuvé par ADI avant publication. Aucun achat fournisseur ni dépense automatique.</p>
+  </div>
+
   <div class="products">
 
-    <article class="card">
+    <article class="card" data-source="demo" data-price="9.90">
       <img loading="lazy"
         src="https://images.unsplash.com/photo-1586319429488-2b4c8f5b6a12?auto=format&fit=crop&w=700&q=80"
         alt="Support téléphone">
@@ -599,11 +627,12 @@ footer a:hover{color:var(--yellow)}
         <p data-fr="Support pratique pour smartphone, bureau ou utilisation quotidienne."
            data-en="Practical smartphone stand for desks and everyday use.">Support pratique pour smartphone, bureau ou utilisation quotidienne.</p>
         <div class="price">9,90 €</div>
+        <div class="shipping" data-fr="Livraison : à confirmer" data-en="Shipping: to be confirmed">Livraison : à confirmer</div>
         <button onclick="askProduct('Support téléphone universel')" data-fr="Demander ce produit" data-en="Request this product">Demander ce produit</button>
       </div>
     </article>
 
-    <article class="card">
+    <article class="card" data-source="demo" data-price="24.90">
       <img loading="lazy"
         src="https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=700&q=80"
         alt="Lampe décorative">
@@ -612,11 +641,12 @@ footer a:hover{color:var(--yellow)}
         <p data-fr="Éclairage décoratif moderne pour la maison et le bureau."
            data-en="Modern decorative lighting for home and office.">Éclairage décoratif moderne pour la maison et le bureau.</p>
         <div class="price">24,90 €</div>
+        <div class="shipping" data-fr="Livraison : à confirmer" data-en="Shipping: to be confirmed">Livraison : à confirmer</div>
         <button onclick="askProduct('Lampe décorative LED')" data-fr="Demander ce produit" data-en="Request this product">Demander ce produit</button>
       </div>
     </article>
 
-    <article class="card">
+    <article class="card" data-source="demo" data-price="34.90">
       <img loading="lazy"
         src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"
         alt="Casque audio">
@@ -625,11 +655,12 @@ footer a:hover{color:var(--yellow)}
         <p data-fr="Casque pour musique, loisirs et utilisation quotidienne."
            data-en="Headphones for music, entertainment and everyday use.">Casque pour musique, loisirs et utilisation quotidienne.</p>
         <div class="price">34,90 €</div>
+        <div class="shipping" data-fr="Livraison : à confirmer" data-en="Shipping: to be confirmed">Livraison : à confirmer</div>
         <button onclick="askProduct('Casque audio')" data-fr="Demander ce produit" data-en="Request this product">Demander ce produit</button>
       </div>
     </article>
 
-    <article class="card">
+    <article class="card" data-source="demo" data-price="19.90">
       <img loading="lazy"
         src="https://images.unsplash.com/photo-1570197788417-0e82375c9371?auto=format&fit=crop&w=700&q=80"
         alt="Accessoire maison">
@@ -638,13 +669,14 @@ footer a:hover{color:var(--yellow)}
         <p data-fr="Un produit pratique pour améliorer le confort au quotidien."
            data-en="A practical product to improve everyday comfort.">Un produit pratique pour améliorer le confort au quotidien.</p>
         <div class="price">19,90 €</div>
+        <div class="shipping" data-fr="Livraison : à confirmer" data-en="Shipping: to be confirmed">Livraison : à confirmer</div>
         <button onclick="askProduct('Accessoire maison')" data-fr="Demander ce produit" data-en="Request this product">Demander ce produit</button>
       </div>
     </article>
 
   </div>
 
-  <p class="note" data-fr="Produits et prix affichés à titre de démonstration."
+  <p class="note" data-fr="Articles ci-dessus : exemples de démonstration, non disponibles à l'achat. Les offres fournisseurs réelles seront affichées uniquement après vérification du prix, des frais de livraison et validation humaine." data-en="Items above are demo examples, not available for purchase. Real supplier offers will appear only after price and shipping verification and human approval."
      data-en="Products and prices shown for demonstration purposes.">Produits et prix affichés à titre de démonstration.</p>
 </section>
 
@@ -750,12 +782,25 @@ function toggleLang(){
   document.getElementById("lang").textContent=lang==="fr"?"EN":"FR";
 }
 
+function filterCatalog(){
+  document.querySelectorAll(".products .card").forEach(card=>{
+    const price=Number(card.dataset.price);
+    const validPrice=Number.isFinite(price)&&price>=0&&price<50;
+    const isDemo=card.dataset.source==="demo";
+    const isApprovedSupplier=card.dataset.source==="supplier" &&
+      card.dataset.priceVerified==="true" &&
+      card.dataset.humanApproved==="true";
+    card.hidden=!(validPrice&&(isDemo||isApprovedSupplier));
+  });
+}
+
 function askProduct(productName){
   document.getElementById("product").value=productName;
   document.getElementById("request").scrollIntoView({behavior:"smooth"});
 }
 
 document.getElementById("year").textContent=new Date().getFullYear();
+filterCatalog();
 
 document.getElementById("productForm").addEventListener("submit",function(e){
   e.preventDefault();
