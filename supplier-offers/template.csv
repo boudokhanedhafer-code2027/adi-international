@@ -1,0 +1,2 @@
+supplier_name,source_url,product_name,model_variant,condition,moq,supplier_price,supplier_currency,stock_status,shipping_cost,shipping_currency,destination_country,shipping_status,delivery_estimate_days,other_fees,tax_duty_status,checked_at,verification_status,human_approval,adi_sale_price_eur,notes
+,,,,,,,,,,,,unconfirmed,,,,,imported,not_approved,,
