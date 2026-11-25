@@ -1,4 +1,4 @@
-name: ADI INTERNATIONAL - V4.1 Monitor
+name: ADI INTERNATIONAL - V4.1 Product Research
 
 on:
   workflow_dispatch:
@@ -9,39 +9,32 @@ permissions:
   contents: read
 
 jobs:
-  monitor:
+  product-research:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Check ADI V4.1 files
-        run: |
-          echo "=== ADI INTERNATIONAL V4.1 MONITOR ==="
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-          SCRIPT="adi_product_research_v4_1.py"
-          REPORT="reports/daily-report-v4-latest.md"
-          JSON="reports/daily-report-v4-latest.json"
+      - name: Validate V4.1 script
+        run: python -m py_compile adi_product_research_v4_1.py
 
-          if [ -f "$SCRIPT" ]; then
-            echo "OK: V4.1 script found"
-            python3 -m py_compile "$SCRIPT"
-            echo "OK: Python syntax valid"
-          else
-            echo "WARNING: V4.1 script missing"
-          fi
+      - name: Run ADI V4.1 supplier discovery
+        env:
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+        run: python adi_product_research_v4_1.py
 
-          if [ -f "$REPORT" ]; then
-            echo "OK: Latest Markdown report found"
-          else
-            echo "INFO: No latest Markdown report yet"
-          fi
-
-          if [ -f "$JSON" ]; then
-            echo "OK: Latest JSON report found"
-          else
-            echo "INFO: No latest JSON report yet"
-          fi
-
-          echo "=== MONITOR FINISHED ==="
+      - name: Upload V4.1 research reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: ADI-V4.1-Research-Report
+          path: |
+            reports/daily-report-v4-latest.md
+            reports/daily-report-v4-latest.json
+          if-no-files-found: error
+          retention-days: 30
