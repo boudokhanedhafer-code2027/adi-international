@@ -446,6 +446,16 @@ section.content-section{padding:65px 5%}
 .form-note{font-size:12px;color:#788ba0;line-height:1.7;margin-top:12px}
 #message{margin-top:15px;color:#0875df;font-weight:bold}
 
+/* PAYMENT METHODS - DEMO ONLY */
+.payment-section{background:#fff}
+.payment-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;max-width:760px;margin:0 auto}
+.payment-card{border:1px solid #dce7f2;border-radius:16px;padding:25px;text-align:center;background:#fafdff}
+.payment-card h3{font-size:22px;color:#123e69;margin:12px 0}
+.payment-logo{font-size:34px;font-weight:900;letter-spacing:-1px}
+.payment-status{display:inline-block;margin-top:14px;padding:7px 12px;border-radius:20px;background:#fff2cc;color:#755400;font-size:12px;font-weight:bold}
+.payment-warning{max-width:760px;margin:22px auto 0;text-align:center;color:#71849a;font-size:13px;line-height:1.7}
+@media(max-width:650px){.payment-grid{grid-template-columns:1fr}}
+ 
 /* FOOTER */
 footer{
   background:#031936;
@@ -549,6 +559,7 @@ footer a:hover{color:var(--yellow)}
     <a href="#categories" data-fr="Catégories" data-en="Categories">Catégories</a>
     <a href="#request" data-fr="Demande" data-en="Request">Demande</a>
     <a href="#advert" data-fr="Publicité" data-en="Advertising">Publicité</a>
+    <a href="#payment" data-fr="Paiement" data-en="Payment">Paiement</a>
     <a href="#contact" data-fr="Contact" data-en="Contact">Contact</a>
     <button id="lang" onclick="toggleLang()">EN</button>
   </nav>
@@ -745,6 +756,33 @@ footer a:hover{color:var(--yellow)}
     </p>
     <div id="message"></div>
   </div>
+</section>
+
+<!-- PAYMENT METHODS -->
+<section class="content-section payment-section" id="payment">
+  <div class="heading">
+    <h2 data-fr="Moyens de paiement" data-en="Payment methods">Moyens de paiement</h2>
+    <p data-fr="PayPal et Payoneer sont prévus comme options de paiement pour ADI INTERNATIONAL."
+       data-en="PayPal and Payoneer are planned payment options for ADI INTERNATIONAL.">PayPal et Payoneer sont prévus comme options de paiement pour ADI INTERNATIONAL.</p>
+  </div>
+  <div class="payment-grid">
+    <div class="payment-card">
+      <div class="payment-logo" style="color:#003087">PayPal</div>
+      <h3>PayPal</h3>
+      <p data-fr="Option prévue — connexion au compte professionnel à réaliser ultérieurement."
+         data-en="Planned option — professional account connection to be completed later.">Option prévue — connexion au compte professionnel à réaliser ultérieurement.</p>
+      <span class="payment-status" data-fr="DÉMONSTRATION — NON ACTIVÉ" data-en="DEMO — NOT ENABLED">DÉMONSTRATION — NON ACTIVÉ</span>
+    </div>
+    <div class="payment-card">
+      <div class="payment-logo" style="color:#ff4800">Payoneer</div>
+      <h3>Payoneer</h3>
+      <p data-fr="Option prévue — connexion au compte professionnel à réaliser ultérieurement."
+         data-en="Planned option — professional account connection to be completed later.">Option prévue — connexion au compte professionnel à réaliser ultérieurement.</p>
+      <span class="payment-status" data-fr="DÉMONSTRATION — NON ACTIVÉ" data-en="DEMO — NOT ENABLED">DÉMONSTRATION — NON ACTIVÉ</span>
+    </div>
+  </div>
+  <p class="payment-warning" data-fr="Aucun paiement n'est accepté actuellement. Les moyens de paiement ne seront activés qu'après vérification des comptes, de l'éligibilité, de la sécurité et des obligations applicables. Toute commande fournisseur nécessitera un paiement client confirmé et une approbation humaine distincte."
+     data-en="Payments are not accepted at this time. Payment methods will only be enabled after account, eligibility, security and applicable requirements are verified. Every supplier order will require confirmed customer payment and separate human approval.">Aucun paiement n'est accepté actuellement. Les moyens de paiement ne seront activés qu'après vérification des comptes, de l'éligibilité, de la sécurité et des obligations applicables. Toute commande fournisseur nécessitera un paiement client confirmé et une approbation humaine distincte.</p>
 </section>
 
 <!-- FOOTER -->
