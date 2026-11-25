@@ -866,7 +866,16 @@ function renderDraftCatalogue(){
   const grid=document.getElementById("draftGrid");
   if(!grid || !draftProducts.length) return;
   const term=(document.getElementById("draftSearch").value||"").trim().toLocaleLowerCase();
-  const category=document.getElementById("draftCategory").value;
+  const categorySelect=document.getElementById("draftCategory");
+  const category=categorySelect.value;
+  [...categorySelect.options].forEach(option=>{
+    if(!option.value){
+      option.textContent=lang==="fr"?"Toutes les catégories":"All categories";
+    }else{
+      const sample=draftProducts.find(p=>p.category_fr===option.value);
+      if(sample) option.textContent=lang==="fr"?sample.category_fr:sample.category_en;
+    }
+  });
   const filtered=draftProducts.filter(p=>{
     const name=lang==="fr"?p.name_fr:p.name_en;
     const desc=lang==="fr"?p.description_fr:p.description_en;
