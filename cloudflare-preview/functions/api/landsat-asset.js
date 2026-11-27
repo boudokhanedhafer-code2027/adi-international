@@ -20,7 +20,7 @@ function validAsset(value) {
   try { url = new URL(value || ""); } catch { return null; }
   const allowed = url.protocol === "https:" &&
     url.hostname === "landsatlook.usgs.gov" &&
-    !url.username && !url.password &&
+    !url.port && !url.username && !url.password &&
     url.pathname.startsWith("/data/collection02/level-2/standard/oli-tirs/") &&
     url.pathname.toUpperCase().endsWith(".TIF");
   return allowed ? url : null;
@@ -31,7 +31,8 @@ function parseRange(value) {
   if (!match) return null;
   const start = Number(match[1]);
   const requestedEnd = match[2] === "" ? null : Number(match[2]);
-  if (!Number.isSafeInteger(start) || start < 0) return null;
+  if (!Number.isSafeInteger(start) || start < 0 ||
+      start > Number.MAX_SAFE_INTEGER - MAX_RANGE_BYTES) return null;
   if (requestedEnd !== null &&
       (!Number.isSafeInteger(requestedEnd) || requestedEnd < start)) return null;
   if (requestedEnd !== null && requestedEnd - start + 1 > MAX_RANGE_BYTES) {
@@ -84,6 +85,21 @@ function upstreamHeaders(response) {
   return out;
 }
 
+// Ne suit jamais une redirection : l'hôte amont reste strictement celui autorisé.
+async function fetchUSGS(url, options) {
+  return fetch(url, {
+    ...options,
+    redirect: "manual",
+    signal: AbortSignal.timeout(TIMEOUT_MS)
+  });
+}
+
+function validTotal(value) {
+  if (!value || !/^\d+$/.test(value)) return null;
+  const total = Number(value);
+  return Number.isSafeInteger(total) && total > 0 ? String(total) : null;
+}
+
 export async function onRequest({ request }) {
   if (request.method === "OPTIONS") return reply(null, 204);
   if (!["GET", "HEAD"].includes(request.method)) {
@@ -93,30 +109,29 @@ export async function onRequest({ request }) {
   const asset = validAsset(new URL(request.url).searchParams.get("url"));
   if (!asset) return reply("Asset URL not allowed", 403);
 
-  const controllerSignal = AbortSignal.timeout(TIMEOUT_MS);
-
   try {
     if (request.method === "HEAD") {
       let method = "HEAD";
-      let upstream = await fetch(asset.toString(), {
-        method: "HEAD",
-        signal: controllerSignal
-      });
+      let upstream = await fetchUSGS(asset.toString(), { method: "HEAD" });
 
       let total = upstream.status === 200
-        ? upstream.headers.get("content-length")
+        ? validTotal(upstream.headers.get("content-length"))
         : null;
 
       if (!total) {
+        await upstream.body?.cancel();
         method = "GET Range bytes=0-0";
-        upstream = await fetch(asset.toString(), {
+        upstream = await fetchUSGS(asset.toString(), {
           method: "GET",
-          headers: { "Range": "bytes=0-0", "Accept-Encoding": "identity", "Accept": "image/tiff,*/*" },
-          signal: controllerSignal
+          headers: {
+            "Range": "bytes=0-0",
+            "Accept-Encoding": "identity",
+            "Accept": "image/tiff,*/*"
+          }
         });
         const contentRange = upstream.headers.get("content-range") || "";
         const match = /^bytes 0-0\/(\d+)$/i.exec(contentRange);
-        total = upstream.status === 206 && match ? match[1] : null;
+        total = upstream.status === 206 && match ? validTotal(match[1]) : null;
         await upstream.body?.cancel();
       }
 
@@ -124,8 +139,8 @@ export async function onRequest({ request }) {
         ...upstreamHeaders(upstream),
         "X-Landsat-Upstream-Method": method
       };
-      if (!total || !/^\d+$/.test(total)) {
-        return reply("USGS did not provide a valid complete GeoTIFF size.", 502, headers);
+      if (!total) {
+        return reply("USGS did not provide a valid complete GeoTIFF size or attempted a redirect.", 502, headers);
       }
       headers["Content-Length"] = total;
       return reply(null, 200, headers);
@@ -135,14 +150,13 @@ export async function onRequest({ request }) {
     if (!range) return reply("A single valid byte Range header is required", 416);
     if (range.tooLarge) return reply("Requested byte range exceeds the 3 MiB limit", 413);
 
-    const upstream = await fetch(asset.toString(), {
+    const upstream = await fetchUSGS(asset.toString(), {
       method: "GET",
       headers: {
         "Range": "bytes=" + range.start + "-" + range.end,
         "Accept-Encoding": "identity",
         "Accept": "image/tiff,*/*"
-      },
-      signal: controllerSignal
+      }
     });
 
     const headers = upstreamHeaders(upstream);
@@ -167,12 +181,16 @@ export async function onRequest({ request }) {
     const actualStart = Number(match[1]);
     const actualEnd = Number(match[2]);
     const totalSize = Number(match[3]);
+    const expectedEnd = Number.isSafeInteger(totalSize) && totalSize > 0
+      ? Math.min(range.end, totalSize - 1)
+      : -1;
+
     if (!Number.isSafeInteger(actualStart) ||
         !Number.isSafeInteger(actualEnd) ||
         !Number.isSafeInteger(totalSize) ||
         actualStart !== range.start ||
+        actualEnd !== expectedEnd ||
         actualEnd < actualStart ||
-        actualEnd > range.end ||
         actualEnd >= totalSize ||
         actualEnd - actualStart + 1 > MAX_RANGE_BYTES) {
       await upstream.body?.cancel();
