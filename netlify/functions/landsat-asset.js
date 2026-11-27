@@ -19,7 +19,7 @@ exports.handler = async (event) => {
     parsed.pathname.toUpperCase().endsWith(".TIF");
   if (!allowed) return { statusCode: 403, headers, body: "Asset URL not allowed" };
   const range = event.headers?.range || event.headers?.Range;
-  if (event.httpMethod === "GET" && (!range || !/^bytes=\\d+-\\d*$/.test(range))) {
+  if (event.httpMethod === "GET" && (!range || !/^bytes=\d+-\d*$/.test(range))) {
     return { statusCode: 416, headers, body: "A valid byte Range header is required" };
   }
   try {
