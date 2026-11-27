@@ -43,6 +43,9 @@ exports.handler = async (event) => {
         if (value) out[name] = value;
       }
       const contentRange = upstream.headers.get("content-range") || "";
+      out["x-landsat-upstream-status"] = String(upstream.status);
+      out["x-landsat-upstream-content-range"] = contentRange || "absent";
+      out["x-landsat-upstream-length"] = upstream.headers.get("content-length") || "absent";
       const total = contentRange.match(/\\/(\\d+)$/)?.[1] ||
                     contentRange.match(/^bytes \\*\\/(\\d+)$/i)?.[1];
       const length = total || upstream.headers.get("content-length");
