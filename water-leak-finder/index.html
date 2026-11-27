@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#082b4c">
-<title>ADI WATER LEAK FINDER — V5.9 LANDSAT</title>
+<title>ADI WATER LEAK FINDER — V6.0 LANDSAT</title>
 <style>
 :root{--navy:#082b4c;--blue:#0875df;--cyan:#23b8c7;--gold:#f2c94c;--bg:#f3f7fb;--card:#fff;--text:#14283d;--muted:#64788c;--line:#e1eaf2;--green:#17865b;--red:#b94b4b}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
@@ -38,10 +38,10 @@ input[type=text],input[type=number],input[type=date]{padding:10px;border:1px sol
 </head>
 <body>
 <header>
-  <div class="brand"><div class="logo">ADI</div><div><h1>WATER LEAK FINDER <span style="color:#f2c94c">V5.9 LANDSAT</span></h1><p class="subtitle">Tableau de bord d’analyse multispectrale — prototype local avec recherche de scènes Landsat</p></div></div>
+  <div class="brand"><div class="logo">ADI</div><div><h1>WATER LEAK FINDER <span style="color:#f2c94c">V6.0 LANDSAT</span></h1><p class="subtitle">Tableau de bord d’analyse multispectrale — prototype local avec recherche et échantillonnage raster Landsat</p></div></div>
 </header>
 <main class="wrap">
-  <div class="notice"><strong>Mode démonstration :</strong> les 100 lignes intégrées sont des données d’essai V5.7. Elles ne proviennent pas d’une acquisition satellite vérifiée et ne prouvent pas une fuite. Le module Landsat recherche des scènes et permet d’examiner leurs ressources (bandes, aperçus et métadonnées). Cette version ne télécharge pas encore les pixels raster et ne calcule pas d’indice satellite réel.</div>
+  <div class="notice"><strong>Mode démonstration :</strong> les 100 lignes intégrées sont des données d’essai V5.7. Elles ne proviennent pas d’une acquisition satellite vérifiée et ne prouvent pas une fuite. Le module Landsat recherche des scènes et permet d’examiner leurs ressources (bandes, aperçus et métadonnées). La lecture raster expérimentale V6.0 est séparée des 100 lignes de démonstration.</div>
   <div class="toolbar">
     <label class="filelabel" for="fileInput">Importer JSON / CSV</label><input id="fileInput" type="file" accept=".json,.csv,application/json,text/csv">
     <button id="exportJson">Exporter JSON</button>
@@ -76,6 +76,14 @@ input[type=text],input[type=number],input[type=date]{padding:10px;border:1px sol
     <div id="landsatStatus" class="landsat-status">Aucune recherche satellite effectuée. Tu peux choisir la zone pilote plus tard.</div>
     <div id="landsatResults" class="small-note">Les scènes trouvées apparaîtront ici.</div>
   </section>
+
+  <h2 class="section-title">Analyse raster réelle — V6.0 expérimentale</h2>
+  <section class="card">
+    <p class="small-note"><strong>Analyse distincte des données de démonstration.</strong> Sélectionne une scène Landsat dans les résultats, puis lance une lecture limitée des pixels des bandes B4, B5, B6 et QA_PIXEL. L'échantillonnage est réduit à 64 × 64 cellules au maximum. Les indices décrivent la surface, pas une fuite souterraine.</p>
+    <div class="toolbar"><button id="analyzeLandsat" type="button" disabled>Analyser les pixels de la scène sélectionnée</button><span id="rasterSelection" class="status">Aucune scène sélectionnée.</span></div>
+    <div id="rasterStatus" class="landsat-status">En attente d'une scène Landsat avec les bandes requises.</div>
+    <div id="rasterResults" class="stats-wrap"></div>
+  </section>
   <h2 class="section-title">Visualisation des indicateurs V5.7</h2>
   <section class="charts">
     <div class="card chart-card"><div class="chart-title">NDVI par ligne</div><canvas id="chartNdvi"></canvas><div class="chart-note">Valeurs de démonstration ou données importées</div></div>
@@ -85,7 +93,7 @@ input[type=text],input[type=number],input[type=date]{padding:10px;border:1px sol
   </section>
   <h2 class="section-title">Données analysées <span class="pill" id="rowCount">100 lignes</span></h2>
   <div class="table-wrap"><table class="data"><thead><tr><th>Ligne</th><th>NDVI</th><th>Radar VV</th><th>Radar VH</th><th>Température (°C)</th></tr></thead><tbody id="dataBody"></tbody></table></div>
-  <div class="footer">ADI INTERNATIONAL · WATER LEAK FINDER V5.9 LANDSAT · Traitement local du tableau de bord. Catalogue satellite externe requis pour la recherche Landsat.</div>
+  <div class="footer">ADI INTERNATIONAL · WATER LEAK FINDER V6.0 LANDSAT · Indices calculés sur un échantillon raster réel lorsque la lecture aboutit. Les données V5.7 restent une démonstration.</div>
 </main>
 <script>
 const demo=[];
@@ -127,11 +135,14 @@ $('fileInput').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{con
  }catch(err){$('status').textContent='Import impossible : '+err.message}e.target.value=''};
 window.addEventListener('resize',()=>render());render();
 
-/* V5.9 : recherche catalogue et inspection des ressources, séparées des mesures de démonstration. */
+/* V6.0 : recherche catalogue, inspection des ressources et échantillonnage raster réel séparé de la démonstration. */
 const stacEndpoint='/.netlify/functions/landsat-search'; // Relais serveur Netlify : évite l'appel navigateur direct au catalogue.
 function safeText(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function inspectLandsatScene(index){
  const f=(window.adiLandsatFeatures||[])[index];if(!f)return;
+ window.adiSelectedLandsatIndex=index;
+ $('rasterSelection').textContent=(f.id||'Scène sélectionnée')+' — prête pour analyse raster';
+ $('analyzeLandsat').disabled=false;
  const target=$('sceneAssets'+index),assets=f.assets||{};
  const entries=Object.entries(assets).filter(([k,v])=>v&&v.href);
  if(!entries.length){target.textContent='Aucune ressource détaillée fournie par le catalogue.';return}
@@ -154,13 +165,100 @@ $('landsatSearch').onclick=async()=>{
   const data=await resp.json(),features=data.features||[];
   $('landsatStatus').textContent=features.length+' scène(s) retournée(s) pour '+($('pilotName').value||'zone sans nom')+'.';
   if(!features.length){$('landsatResults').textContent='Aucune scène trouvée avec ces critères. Essaie une période plus longue ou un seuil nuage plus élevé.';return}
-  window.adiLandsatFeatures=features;
+  window.adiLandsatFeatures=features;window.adiSelectedLandsatIndex=null;$('analyzeLandsat').disabled=true;$('rasterSelection').textContent='Choisis « Examiner les ressources » sur une scène.';$('rasterStatus').textContent='Sélectionne une scène pour activer la lecture raster.';$('rasterResults').innerHTML='';
   $('landsatResults').innerHTML=features.map((f,i)=>{
    const p=f.properties||{},date=String(p.datetime||p.start_datetime||'').slice(0,10);
    return '<div class="scene"><strong>'+safeText(f.id||'Scène Landsat')+'</strong> <span class="pill">'+safeText(date||'date non précisée')+'</span><p class="small-note">Plateforme : '+safeText(p.platform||'Landsat')+' · Couverture nuageuse de la scène : '+safeText(p['eo:cloud_cover']??'non renseignée')+' %</p><p class="small-note">Identifiant scène : '+safeText(p['landsat:scene_id']||p['landsat:product_id']||'non fourni')+'</p><button type="button" class="secondary" onclick="inspectLandsatScene('+i+')">Examiner les ressources de cette scène</button><div id="sceneAssets'+i+'" class="small-note" style="margin-top:9px"></div></div>';
   }).join('');
  }catch(err){$('landsatStatus').textContent='Recherche non confirmée : '+err.message+'. Le relais Netlify ou le catalogue USGS peut être indisponible. Ouvre la version Netlify du logiciel et réessaie. Aucun résultat satellite n’a été validé.';$('landsatResults').textContent='Aucune donnée satellite importée. Le tableau V5.7 et ses données restent inchangés.'}
 };
+</script>
+
+<script type="module">
+const rasterStatus=document.getElementById('rasterStatus');
+const rasterResults=document.getElementById('rasterResults');
+const rasterButton=document.getElementById('analyzeLandsat');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const assetProxy='/.netlify/functions/landsat-asset';
+function stats(a){return a.length?{n:a.length,min:Math.min(...a),max:Math.max(...a),mean:a.reduce((s,v)=>s+v,0)/a.length}:null}
+function fmt(v){return v===null||!Number.isFinite(v)?'—':v.toFixed(4)}
+function utmDefinition(lon,lat){
+ if(lat < -80 || lat > 84) throw new Error('Latitude hors de la couverture UTM prise en charge.');
+ const zone=Math.max(1,Math.min(60,Math.floor((lon+180)/6)+1));
+ return '+proj=utm +zone='+zone+(lat<0?' +south':'')+' +datum=WGS84 +units=m +no_defs';
+}
+function makeWindow(image,bbox,proj4,crs){
+ const [west,south,east,north]=bbox;
+ const pts=[[west,south],[west,north],[east,south],[east,north]].map(p=>proj4('EPSG:4326',crs,p));
+ const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);
+ const [minX,minY,maxX,maxY]=image.getBoundingBox();
+ const left=Math.max(0,Math.floor((Math.min(...xs)-minX)/(maxX-minX)*image.getWidth()));
+ const right=Math.min(image.getWidth(),Math.ceil((Math.max(...xs)-minX)/(maxX-minX)*image.getWidth()));
+ const top=Math.max(0,Math.floor((maxY-Math.max(...ys))/(maxY-minY)*image.getHeight()));
+ const bottom=Math.min(image.getHeight(),Math.ceil((maxY-Math.min(...ys))/(maxY-minY)*image.getHeight()));
+ if(right<=left||bottom<=top) throw new Error('La zone choisie ne recoupe pas cette image raster.');
+ return [left,top,right,bottom];
+}
+async function readBand(GeoTIFF,href,bbox,proj4,crs){
+ const url=assetProxy+'?url='+encodeURIComponent(href);
+ const tiff=await GeoTIFF.fromUrl(url,{allowFullFile:false});
+ const image=await tiff.getImage();
+ const window=makeWindow(image,bbox,proj4,crs);
+ const rasters=await image.readRasters({window,width:64,height:64,interleave:false});
+ return {values:rasters[0]};
+}
+rasterButton.addEventListener('click',async()=>{
+ const index=window.adiSelectedLandsatIndex;
+ const feature=(window.adiLandsatFeatures||[])[index];
+ if(!feature){rasterStatus.textContent='Sélectionne d’abord une scène Landsat.';return}
+ const assets=feature.assets||{};
+ const required=['red','nir08','swir16','qa_pixel'];
+ const missing=required.filter(k=>!assets[k]?.href);
+ if(missing.length){rasterStatus.textContent='Analyse impossible : ressources absentes — '+missing.join(', ')+'.';return}
+ const lat=Number(document.getElementById('pilotLat').value),lon=Number(document.getElementById('pilotLon').value),size=Number(document.getElementById('pilotSize').value);
+ if(!Number.isFinite(lat)||!Number.isFinite(lon)||!Number.isFinite(size)||size<=0){rasterStatus.textContent='Coordonnées ou demi-largeur invalides.';return}
+ const bbox=[lon-size,lat-size,lon+size,lat+size];
+ rasterButton.disabled=true;rasterStatus.textContent='Lecture des métadonnées GeoTIFF et téléchargement par plages HTTP Range…';rasterResults.innerHTML='';
+ try{
+  const [tiffModule,projModule]=await Promise.all([
+   import('https://cdn.jsdelivr.net/npm/geotiff@2.1.3/+esm'),
+   import('https://cdn.jsdelivr.net/npm/proj4@2.12.1/+esm')
+  ]);
+  const GeoTIFF=tiffModule;
+  const proj4=projModule.default||projModule;
+  const crs=utmDefinition(lon,lat);
+  rasterStatus.textContent='Lecture des bandes B4, B5, B6 et QA_PIXEL…';
+  const [red,nir,swir,qa]=await Promise.all([
+   readBand(GeoTIFF,assets.red.href,bbox,proj4,crs),
+   readBand(GeoTIFF,assets.nir08.href,bbox,proj4,crs),
+   readBand(GeoTIFF,assets.swir16.href,bbox,proj4,crs),
+   readBand(GeoTIFF,assets.qa_pixel.href,bbox,proj4,crs)
+  ]);
+  const n=Math.min(red.values.length,nir.values.length,swir.values.length,qa.values.length);
+  const ndvi=[],ndmi=[];let rejected=0;
+  for(let i=0;i<n;i++){
+   const q=Number(qa.values[i]);
+   if(!Number.isFinite(q)||(q&63)!==0){rejected++;continue}
+   const rv=Number(red.values[i])*0.0000275-0.2;
+   const nv=Number(nir.values[i])*0.0000275-0.2;
+   const sv=Number(swir.values[i])*0.0000275-0.2;
+   if(!Number.isFinite(rv)||!Number.isFinite(nv)||!Number.isFinite(sv)||rv+nv<=0||nv+sv<=0)continue;
+   const vi=(nv-rv)/(nv+rv),mi=(nv-sv)/(nv+sv);
+   if(Number.isFinite(vi)&&vi>=-1&&vi<=1)ndvi.push(vi);
+   if(Number.isFinite(mi)&&mi>=-1&&mi<=1)ndmi.push(mi);
+  }
+  if(!ndvi.length||!ndmi.length) throw new Error('Aucun pixel valide après le contrôle qualité. Essaie une autre date ou une zone plus petite.');
+  const s1=stats(ndvi),s2=stats(ndmi);
+  rasterResults.innerHTML='<table class="stats"><thead><tr><th>Indicateur raster réel</th><th>Moyenne</th><th>Minimum</th><th>Maximum</th><th>Pixels valides</th></tr></thead><tbody>'+
+   '<tr><td>NDVI (B5/B4)</td><td>'+fmt(s1.mean)+'</td><td>'+fmt(s1.min)+'</td><td>'+fmt(s1.max)+'</td><td>'+s1.n+'</td></tr>'+
+   '<tr><td>NDMI (B5/B6)</td><td>'+fmt(s2.mean)+'</td><td>'+fmt(s2.min)+'</td><td>'+fmt(s2.max)+'</td><td>'+s2.n+'</td></tr></tbody></table>'+
+   '<p class="small-note">Scène : '+esc(feature.id)+' · Date : '+esc(feature.properties?.datetime||'non précisée')+' · Emprise demandée : '+bbox.map(v=>v.toFixed(5)).join(', ')+' · Pixels rejetés par QA : '+rejected+'. Échantillonnage réduit à 64 × 64 au maximum par bande. Facteurs Landsat Collection 2 Level-2 SR : 0,0000275 et −0,2.</p>'+
+   '<p class="small-note"><strong>Interprétation :</strong> indices de surface uniquement. Ils ne détectent ni ne confirment une canalisation ou une fuite souterraine.</p>';
+  rasterStatus.textContent='Lecture raster terminée : des pixels valides ont été lus depuis les GeoTIFF de cette scène.';
+ }catch(err){
+  rasterStatus.textContent='Analyse raster non aboutie : '+(err?.message||String(err))+'. Vérifie le déploiement Netlify et le relais de ressources.';
+ }finally{rasterButton.disabled=false}
+});
 </script>
 </body>
 </html>
