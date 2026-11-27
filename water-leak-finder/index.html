@@ -202,7 +202,7 @@ function makeWindow(image,bbox,proj4,crs){
 async function probeAsset(href){
  const url=assetProxy+'?url='+encodeURIComponent(href);
  const head=await fetch(url,{method:'HEAD'});
- if(!head.ok) throw new Error('Relais HEAD HTTP '+head.status+' : '+(await head.text()).slice(0,180));
+ if(!head.ok) throw new Error('Relais HEAD HTTP '+head.status+' ; amont='+head.headers.get('x-landsat-upstream-status')+' ; Content-Range='+head.headers.get('x-landsat-upstream-content-range')+' ; taille='+head.headers.get('x-landsat-upstream-length'));
  const total=head.headers.get('content-length')||'inconnu';
  const range=await fetch(url,{headers:{Range:'bytes=0-15'}});
  if(range.status!==206) throw new Error('Lecture Range HTTP '+range.status+' (206 attendu) : '+(await range.text()).slice(0,180));
