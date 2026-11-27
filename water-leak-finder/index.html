@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#082b4c">
-<title>ADI WATER LEAK FINDER — V5.7 + LANDSAT</title>
+<title>ADI WATER LEAK FINDER — V5.9 LANDSAT</title>
 <style>
 :root{--navy:#082b4c;--blue:#0875df;--cyan:#23b8c7;--gold:#f2c94c;--bg:#f3f7fb;--card:#fff;--text:#14283d;--muted:#64788c;--line:#e1eaf2;--green:#17865b;--red:#b94b4b}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
@@ -38,10 +38,10 @@ input[type=text],input[type=number],input[type=date]{padding:10px;border:1px sol
 </head>
 <body>
 <header>
-  <div class="brand"><div class="logo">ADI</div><div><h1>WATER LEAK FINDER <span style="color:#f2c94c">V5.7 + LANDSAT</span></h1><p class="subtitle">Tableau de bord d’analyse multispectrale — prototype local avec recherche de scènes Landsat</p></div></div>
+  <div class="brand"><div class="logo">ADI</div><div><h1>WATER LEAK FINDER <span style="color:#f2c94c">V5.9 LANDSAT</span></h1><p class="subtitle">Tableau de bord d’analyse multispectrale — prototype local avec recherche de scènes Landsat</p></div></div>
 </header>
 <main class="wrap">
-  <div class="notice"><strong>Mode démonstration :</strong> les 100 lignes intégrées sont des données d’essai V5.7. Elles ne proviennent pas d’une acquisition satellite vérifiée et ne prouvent pas une fuite. Le module Landsat ci-dessous recherche des scènes dans le catalogue public ; il ne télécharge pas encore les bandes raster et ne calcule pas automatiquement les indices sur les pixels.</div>
+  <div class="notice"><strong>Mode démonstration :</strong> les 100 lignes intégrées sont des données d’essai V5.7. Elles ne proviennent pas d’une acquisition satellite vérifiée et ne prouvent pas une fuite. Le module Landsat recherche des scènes et permet d’examiner leurs ressources (bandes, aperçus et métadonnées). Cette version ne télécharge pas encore les pixels raster et ne calcule pas d’indice satellite réel.</div>
   <div class="toolbar">
     <label class="filelabel" for="fileInput">Importer JSON / CSV</label><input id="fileInput" type="file" accept=".json,.csv,application/json,text/csv">
     <button id="exportJson">Exporter JSON</button>
@@ -85,7 +85,7 @@ input[type=text],input[type=number],input[type=date]{padding:10px;border:1px sol
   </section>
   <h2 class="section-title">Données analysées <span class="pill" id="rowCount">100 lignes</span></h2>
   <div class="table-wrap"><table class="data"><thead><tr><th>Ligne</th><th>NDVI</th><th>Radar VV</th><th>Radar VH</th><th>Température (°C)</th></tr></thead><tbody id="dataBody"></tbody></table></div>
-  <div class="footer">ADI INTERNATIONAL · WATER LEAK FINDER V5.7 + LANDSAT · Traitement local du tableau de bord. Catalogue satellite externe requis pour la recherche Landsat.</div>
+  <div class="footer">ADI INTERNATIONAL · WATER LEAK FINDER V5.9 LANDSAT · Traitement local du tableau de bord. Catalogue satellite externe requis pour la recherche Landsat.</div>
 </main>
 <script>
 const demo=[];
@@ -127,9 +127,19 @@ $('fileInput').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{con
  }catch(err){$('status').textContent='Import impossible : '+err.message}e.target.value=''};
 window.addEventListener('resize',()=>render());render();
 
-/* Module catalogue Landsat. La recherche de scènes est distincte des mesures de démonstration ci-dessus. */
+/* V5.9 : recherche catalogue et inspection des ressources, séparées des mesures de démonstration. */
 const stacEndpoint='/.netlify/functions/landsat-search'; // Relais serveur Netlify : évite l'appel navigateur direct au catalogue.
 function safeText(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function inspectLandsatScene(index){
+ const f=(window.adiLandsatFeatures||[])[index];if(!f)return;
+ const target=$('sceneAssets'+index),assets=f.assets||{};
+ const entries=Object.entries(assets).filter(([k,v])=>v&&v.href);
+ if(!entries.length){target.textContent='Aucune ressource détaillée fournie par le catalogue.';return}
+ target.innerHTML='<strong>Ressources disponibles ('+entries.length+') :</strong><ul>'+entries.map(([k,v])=>{
+  const title=v.title||k,media=v.type||v.media_type||'type non précisé';
+  return '<li><strong>'+safeText(k)+'</strong> — '+safeText(title)+' <span class="small-note">('+safeText(media)+')</span> : <a target="_blank" rel="noopener" href="'+safeText(v.href)+'">ouvrir la ressource</a></li>';
+ }).join('')+'</ul><p class="small-note">Ouvrir une ressource permet de consulter le fichier ou ses métadonnées. Cette étape ne signifie pas que les pixels ont été téléchargés ni analysés.</p>';
+}
 $('aboboExample').onclick=()=>{$('pilotName').value='Marché central d’Abobo — exemple à confirmer';$('pilotLat').value='5.416';$('pilotLon').value='-4.020';$('pilotSize').value='0.03';$('landsatStatus').textContent='Exemple de zone chargé. Vérifie le nom et les coordonnées avant de lancer la recherche.'};
 $('clearLandsat').onclick=()=>{$('landsatResults').textContent='Résultats effacés.';$('landsatStatus').textContent='Aucune recherche satellite affichée.'};
 $('landsatSearch').onclick=async()=>{
@@ -144,10 +154,10 @@ $('landsatSearch').onclick=async()=>{
   const data=await resp.json(),features=data.features||[];
   $('landsatStatus').textContent=features.length+' scène(s) retournée(s) pour '+($('pilotName').value||'zone sans nom')+'.';
   if(!features.length){$('landsatResults').textContent='Aucune scène trouvée avec ces critères. Essaie une période plus longue ou un seuil nuage plus élevé.';return}
-  $('landsatResults').innerHTML=features.map(f=>{
-   const p=f.properties||{},assets=f.assets||{},date=String(p.datetime||p.start_datetime||'').slice(0,10);
-   const links=Object.entries(assets).filter(([k,v])=>v&&v.href).slice(0,12).map(([k,v])=>'<a target="_blank" rel="noopener" href="'+safeText(v.href)+'">'+safeText(k)+'</a>').join(' · ');
-   return '<div class="scene"><strong>'+safeText(f.id||'Scène Landsat')+'</strong> <span class="pill">'+safeText(date||'date non précisée')+'</span><p class="small-note">Plateforme : '+safeText(p.platform||'Landsat')+' · Couverture nuageuse : '+safeText(p['eo:cloud_cover']??'non renseignée')+' %</p><p class="small-note">Identifiant scène : '+safeText(p['landsat:scene_id']||p['landsat:product_id']||'non fourni')+'</p><p>Liens de ressources : '+(links||'Le catalogue ne fournit pas de liens de bandes dans cette réponse.')+'</p></div>';
+  window.adiLandsatFeatures=features;
+  $('landsatResults').innerHTML=features.map((f,i)=>{
+   const p=f.properties||{},date=String(p.datetime||p.start_datetime||'').slice(0,10);
+   return '<div class="scene"><strong>'+safeText(f.id||'Scène Landsat')+'</strong> <span class="pill">'+safeText(date||'date non précisée')+'</span><p class="small-note">Plateforme : '+safeText(p.platform||'Landsat')+' · Couverture nuageuse de la scène : '+safeText(p['eo:cloud_cover']??'non renseignée')+' %</p><p class="small-note">Identifiant scène : '+safeText(p['landsat:scene_id']||p['landsat:product_id']||'non fourni')+'</p><button type="button" class="secondary" onclick="inspectLandsatScene('+i+')">Examiner les ressources de cette scène</button><div id="sceneAssets'+i+'" class="small-note" style="margin-top:9px"></div></div>';
   }).join('');
  }catch(err){$('landsatStatus').textContent='Recherche non confirmée : '+err.message+'. Le relais Netlify ou le catalogue USGS peut être indisponible. Ouvre la version Netlify du logiciel et réessaie. Aucun résultat satellite n’a été validé.';$('landsatResults').textContent='Aucune donnée satellite importée. Le tableau V5.7 et ses données restent inchangés.'}
 };
