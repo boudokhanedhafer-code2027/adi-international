@@ -79,7 +79,7 @@ input[type=text],input[type=number],input[type=date]{padding:10px;border:1px sol
 
   <h2 class="section-title">Analyse raster réelle — V6.0 expérimentale</h2>
   <section class="card">
-    <p class="small-note"><strong>Analyse distincte des données de démonstration.</strong> Sélectionne une scène Landsat dans les résultats, puis lance une lecture limitée des pixels des bandes B4, B5, B6 et QA_PIXEL. L'échantillonnage est réduit à 64 × 64 cellules au maximum. Les indices décrivent la surface, pas une fuite souterraine.</p>
+    <p class="small-note"><strong>Analyse distincte des données de démonstration.</strong> Sélectionne une scène Landsat, puis lance une lecture par plages HTTP du GeoTIFF pour les bandes B4, B5, B6 et QA_PIXEL. L'échantillonnage vise au maximum 64 × 64 cellules par bande. Les indices décrivent la surface et ne prouvent pas une fuite souterraine.</p>
     <div class="toolbar"><button id="analyzeLandsat" type="button" disabled>Analyser les pixels de la scène sélectionnée</button><span id="rasterSelection" class="status">Aucune scène sélectionnée.</span></div>
     <div id="rasterStatus" class="landsat-status">En attente d'une scène Landsat avec les bandes requises.</div>
     <div id="rasterResults" class="stats-wrap"></div>
@@ -152,25 +152,25 @@ function inspectLandsatScene(index){
  }).join('')+'</ul><p class="small-note">Ouvrir une ressource permet de consulter le fichier ou ses métadonnées. Cette étape ne signifie pas que les pixels ont été téléchargés ni analysés.</p>';
 }
 $('aboboExample').onclick=()=>{$('pilotName').value='Marché central d’Abobo — exemple à confirmer';$('pilotLat').value='5.416';$('pilotLon').value='-4.020';$('pilotSize').value='0.03';$('landsatStatus').textContent='Exemple de zone chargé. Vérifie le nom et les coordonnées avant de lancer la recherche.'};
-$('clearLandsat').onclick=()=>{$('landsatResults').textContent='Résultats effacés.';$('landsatStatus').textContent='Aucune recherche satellite affichée.'};
+$('clearLandsat').onclick=()=>{window.adiLandsatFeatures=[];window.adiSelectedLandsatIndex=null;$('analyzeLandsat').disabled=true;$('rasterSelection').textContent='Aucune scène sélectionnée.';$('rasterStatus').textContent='En attente d’une scène Landsat avec les bandes requises.';$('rasterResults').innerHTML='';$('landsatResults').textContent='Résultats effacés.';$('landsatStatus').textContent='Aucune recherche satellite affichée.'};
 $('landsatSearch').onclick=async()=>{
  const lat=Number($('pilotLat').value),lon=Number($('pilotLon').value),size=Number($('pilotSize').value),cloud=Number($('pilotCloud').value),start=$('pilotStart').value,end=$('pilotEnd').value,limit=Number($('pilotLimit').value);
  if(!Number.isFinite(lat)||lat < -90||lat>90||!Number.isFinite(lon)||lon < -180||lon>180||!Number.isFinite(size)||size<=0||size>2){$('landsatStatus').textContent='Coordonnées ou taille invalides. Renseigne latitude, longitude et demi-largeur.';return}
  if(!start||!end||start>end||!Number.isFinite(cloud)||cloud<0||cloud>100){$('landsatStatus').textContent='Vérifie les dates et le pourcentage de nuages.';return}
  const bbox=[lon-size,lat-size,lon+size,lat+size],payload={collections:['landsat-c2l2-sr'],bbox,datetime:start+'T00:00:00Z/'+end+'T23:59:59Z',limit,query:{'eo:cloud_cover':{lte:cloud}}};
- $('landsatStatus').textContent='Recherche en cours via le relais Cloudflare Pages vers le catalogue USGS Landsat…';$('landsatResults').textContent='Chargement des scènes…';
+ window.adiLandsatFeatures=[];window.adiSelectedLandsatIndex=null;$('analyzeLandsat').disabled=true;$('rasterSelection').textContent='Aucune scène sélectionnée.';$('rasterStatus').textContent='En attente des résultats de recherche.';$('rasterResults').innerHTML='';$('landsatStatus').textContent='Recherche en cours via le relais Cloudflare Pages vers le catalogue USGS Landsat…';$('landsatResults').textContent='Chargement des scènes…';
  try{
   const resp=await fetch(stacEndpoint,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/geo+json'},body:JSON.stringify(payload)});
   if(!resp.ok)throw new Error('HTTP '+resp.status);
   const data=await resp.json(),features=data.features||[];
   $('landsatStatus').textContent=features.length+' scène(s) retournée(s) pour '+($('pilotName').value||'zone sans nom')+'.';
-  if(!features.length){$('landsatResults').textContent='Aucune scène trouvée avec ces critères. Essaie une période plus longue ou un seuil nuage plus élevé.';return}
+  if(!features.length){window.adiLandsatFeatures=[];window.adiSelectedLandsatIndex=null;$('analyzeLandsat').disabled=true;$('rasterSelection').textContent='Aucune scène sélectionnée.';$('rasterStatus').textContent='Aucune scène disponible pour l’analyse raster.';$('landsatResults').textContent='Aucune scène trouvée avec ces critères. Essaie une période plus longue ou un seuil nuage plus élevé.';return}
   window.adiLandsatFeatures=features;window.adiSelectedLandsatIndex=null;$('analyzeLandsat').disabled=true;$('rasterSelection').textContent='Choisis « Examiner les ressources » sur une scène.';$('rasterStatus').textContent='Sélectionne une scène pour activer la lecture raster.';$('rasterResults').innerHTML='';
   $('landsatResults').innerHTML=features.map((f,i)=>{
    const p=f.properties||{},date=String(p.datetime||p.start_datetime||'').slice(0,10);
    return '<div class="scene"><strong>'+safeText(f.id||'Scène Landsat')+'</strong> <span class="pill">'+safeText(date||'date non précisée')+'</span><p class="small-note">Plateforme : '+safeText(p.platform||'Landsat')+' · Couverture nuageuse de la scène : '+safeText(p['eo:cloud_cover']??'non renseignée')+' %</p><p class="small-note">Identifiant scène : '+safeText(p['landsat:scene_id']||p['landsat:product_id']||'non fourni')+'</p><button type="button" class="secondary" onclick="inspectLandsatScene('+i+')">Examiner les ressources de cette scène</button><div id="sceneAssets'+i+'" class="small-note" style="margin-top:9px"></div></div>';
   }).join('');
- }catch(err){$('landsatStatus').textContent='Recherche non confirmée : '+err.message+'. Le relais Cloudflare Pages ou le catalogue USGS peut être indisponible. Vérifie le déploiement Cloudflare Pages et réessaie. Aucun résultat satellite n’a été validé.';$('landsatResults').textContent='Aucune donnée satellite importée. Le tableau V5.7 et ses données restent inchangés.'}
+ }catch(err){window.adiLandsatFeatures=[];window.adiSelectedLandsatIndex=null;$('analyzeLandsat').disabled=true;$('rasterSelection').textContent='Aucune scène sélectionnée.';$('rasterStatus').textContent='Recherche échouée : aucune scène disponible pour l’analyse.';$('landsatStatus').textContent='Recherche non confirmée : '+err.message+'. Le relais Cloudflare Pages ou le catalogue USGS peut être indisponible. Vérifie le déploiement Cloudflare Pages et réessaie. Aucun résultat satellite n’a été validé.';$('landsatResults').textContent='Aucune donnée satellite importée. Le tableau V5.7 et ses données restent inchangés.'}
 };
 </script>
 
@@ -241,8 +241,8 @@ rasterButton.addEventListener('click',async()=>{
   const proj4=projModule.default||projModule;
   rasterStage='préparation de la projection de la zone';
   const crs=utmDefinition(lon,lat);
-  rasterStage='test HEAD/Range du relais Netlify sur la bande B4';
-  rasterStatus.textContent='Test du relais HTTP sur la bande B4…';
+  rasterStage='test HEAD/Range du relais Cloudflare Pages sur la bande B4';
+  rasterStatus.textContent='Test du relais Cloudflare Pages HTTP sur la bande B4…';
   const probe=await probeAsset(assets.red.href);
   rasterStage='lecture des bandes GeoTIFF B4, B5, B6 et QA_PIXEL';
   rasterStatus.textContent='Relais accessible (taille '+probe.total+' octets ; '+probe.contentRange+'). Lecture des bandes B4, B5, B6 et QA_PIXEL…';
