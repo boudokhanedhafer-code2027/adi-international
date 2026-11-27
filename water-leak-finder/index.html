@@ -199,6 +199,18 @@ function makeWindow(image,bbox,proj4,crs){
  if(right<=left||bottom<=top) throw new Error('La zone choisie ne recoupe pas cette image raster.');
  return [left,top,right,bottom];
 }
+async function probeAsset(href){
+ const url=assetProxy+'?url='+encodeURIComponent(href);
+ const head=await fetch(url,{method:'HEAD'});
+ if(!head.ok) throw new Error('Relais HEAD HTTP '+head.status+' : '+(await head.text()).slice(0,180));
+ const total=head.headers.get('content-length')||'inconnu';
+ const range=await fetch(url,{headers:{Range:'bytes=0-15'}});
+ if(range.status!==206) throw new Error('Lecture Range HTTP '+range.status+' (206 attendu) : '+(await range.text()).slice(0,180));
+ const cr=range.headers.get('content-range')||'absent';
+ const bytes=await range.arrayBuffer();
+ if(bytes.byteLength!==16) throw new Error('Bloc raster incomplet : '+bytes.byteLength+' octets reçus, 16 attendus.');
+ return {total,contentRange:cr};
+}
 async function readBand(GeoTIFF,href,bbox,proj4,crs){
  const url=assetProxy+'?url='+encodeURIComponent(href);
  const tiff=await GeoTIFF.fromUrl(url,{allowFullFile:false});
@@ -227,7 +239,9 @@ rasterButton.addEventListener('click',async()=>{
   const GeoTIFF=tiffModule;
   const proj4=projModule.default||projModule;
   const crs=utmDefinition(lon,lat);
-  rasterStatus.textContent='Lecture des bandes B4, B5, B6 et QA_PIXEL…';
+  rasterStatus.textContent='Test du relais HTTP sur la bande B4…';
+  const probe=await probeAsset(assets.red.href);
+  rasterStatus.textContent='Relais accessible (taille '+probe.total+' octets ; '+probe.contentRange+'). Lecture des bandes B4, B5, B6 et QA_PIXEL…';
   const [red,nir,swir,qa]=await Promise.all([
    readBand(GeoTIFF,assets.red.href,bbox,proj4,crs),
    readBand(GeoTIFF,assets.nir08.href,bbox,proj4,crs),
