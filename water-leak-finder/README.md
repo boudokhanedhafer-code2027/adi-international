@@ -1,25 +1,28 @@
-# ADI WATER LEAK FINDER — V5.7
+# ADI WATER LEAK FINDER — V5.8
 
 Projet indépendant du site commercial ADI INTERNATIONAL.
 
-## Statut
+## État du prototype
 
-Ce dossier prépare l'intégration de la version V5.7 existante. Le code source complet de V5.7 n'a pas encore été transféré dans ce dossier : ne pas considérer cette page comme une version opérationnelle.
+- `index.html` : tableau de bord V5.7 avec recherche de scènes Landsat.
+- `netlify/functions/landsat-search.js` : relais serveur Netlify qui transmet les recherches au catalogue public USGS Landsat STAC.
+- Le relais valide les coordonnées, la période, la couverture nuageuse et le nombre de résultats.
+- La recherche doit être testée sur le déploiement Netlify. GitHub Pages ne fournit pas les fonctions Netlify.
 
-## Organisation prévue
+## Limites actuelles
 
-- `index.html` : interface principale V5.7.
-- `landsat.js` : recherche et récupération des scènes Landsat depuis un service STAC public compatible.
-- `analysis.js` : calcul des indicateurs et présentation des résultats.
+- Le relais résout le problème d'appel direct depuis le navigateur dans les cas où le catalogue bloque les requêtes cross-origin. Il ne garantit pas que le catalogue USGS soit toujours disponible.
+- La fonction recherche les métadonnées des scènes ; elle ne télécharge pas les bandes raster et ne calcule pas encore NDVI, température ou indicateurs sur les pixels.
+- Les 100 lignes intégrées restent des données de démonstration et ne sont pas des observations satellite.
+- Une anomalie satellitaire ne constitue pas une preuve de fuite d'eau. Toute hypothèse doit être vérifiée avec des données adaptées et sur le terrain.
 
-## Principes de fiabilité
+## Test
 
-- Distinguer les acquisitions satellitaires réelles des données de démonstration.
-- Afficher la source, la date, la couverture nuageuse et les limites de chaque scène lorsque ces métadonnées sont disponibles.
-- Ne jamais présenter un indice satellitaire comme une preuve certaine de fuite d'eau.
-- Permettre la recherche par coordonnées et la définition d'une zone d'étude carrée.
-- Ne pas modifier le site public ADI INTERNATIONAL.
+1. Ouvrir la version Netlify : `https://adi-international.netlify.app/water-leak-finder/`
+2. Cliquer sur « Charger exemple Abobo » ou saisir une zone.
+3. Lancer « Rechercher les scènes Landsat ».
+4. Vérifier les identifiants, dates et couvertures nuageuses retournés.
+5. Si une erreur apparaît, conserver le message exact pour le diagnostic.
 
-## Prochaine étape
-
-Importer ici le code source complet de V5.7, puis intégrer et tester la recherche Landsat sur des scènes réelles avant toute publication comme outil opérationnel.
+Aucun achat, abonnement ni identifiant privé n'est ajouté par ce prototype.
+Le site principal ADI INTERNATIONAL n'est pas modifié par cette intégration.
