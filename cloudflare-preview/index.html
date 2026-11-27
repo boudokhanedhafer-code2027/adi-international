@@ -158,7 +158,7 @@ $('landsatSearch').onclick=async()=>{
  if(!Number.isFinite(lat)||lat < -90||lat>90||!Number.isFinite(lon)||lon < -180||lon>180||!Number.isFinite(size)||size<=0||size>2){$('landsatStatus').textContent='Coordonnées ou taille invalides. Renseigne latitude, longitude et demi-largeur.';return}
  if(!start||!end||start>end||!Number.isFinite(cloud)||cloud<0||cloud>100){$('landsatStatus').textContent='Vérifie les dates et le pourcentage de nuages.';return}
  const bbox=[lon-size,lat-size,lon+size,lat+size],payload={collections:['landsat-c2l2-sr'],bbox,datetime:start+'T00:00:00Z/'+end+'T23:59:59Z',limit,query:{'eo:cloud_cover':{lte:cloud}}};
- $('landsatStatus').textContent='Recherche en cours via le relais Netlify vers le catalogue USGS Landsat…';$('landsatResults').textContent='Chargement des scènes…';
+ $('landsatStatus').textContent='Recherche en cours via le relais Cloudflare Pages vers le catalogue USGS Landsat…';$('landsatResults').textContent='Chargement des scènes…';
  try{
   const resp=await fetch(stacEndpoint,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/geo+json'},body:JSON.stringify(payload)});
   if(!resp.ok)throw new Error('HTTP '+resp.status);
@@ -170,7 +170,7 @@ $('landsatSearch').onclick=async()=>{
    const p=f.properties||{},date=String(p.datetime||p.start_datetime||'').slice(0,10);
    return '<div class="scene"><strong>'+safeText(f.id||'Scène Landsat')+'</strong> <span class="pill">'+safeText(date||'date non précisée')+'</span><p class="small-note">Plateforme : '+safeText(p.platform||'Landsat')+' · Couverture nuageuse de la scène : '+safeText(p['eo:cloud_cover']??'non renseignée')+' %</p><p class="small-note">Identifiant scène : '+safeText(p['landsat:scene_id']||p['landsat:product_id']||'non fourni')+'</p><button type="button" class="secondary" onclick="inspectLandsatScene('+i+')">Examiner les ressources de cette scène</button><div id="sceneAssets'+i+'" class="small-note" style="margin-top:9px"></div></div>';
   }).join('');
- }catch(err){$('landsatStatus').textContent='Recherche non confirmée : '+err.message+'. Le relais Netlify ou le catalogue USGS peut être indisponible. Ouvre la version Netlify du logiciel et réessaie. Aucun résultat satellite n’a été validé.';$('landsatResults').textContent='Aucune donnée satellite importée. Le tableau V5.7 et ses données restent inchangés.'}
+ }catch(err){$('landsatStatus').textContent='Recherche non confirmée : '+err.message+'. Le relais Cloudflare Pages ou le catalogue USGS peut être indisponible. Vérifie le déploiement Cloudflare Pages et réessaie. Aucun résultat satellite n’a été validé.';$('landsatResults').textContent='Aucune donnée satellite importée. Le tableau V5.7 et ses données restent inchangés.'}
 };
 </script>
 
