@@ -231,6 +231,7 @@ rasterButton.addEventListener('click',async()=>{
  if(!Number.isFinite(lat)||!Number.isFinite(lon)||!Number.isFinite(size)||size<=0){rasterStatus.textContent='Coordonnées ou demi-largeur invalides.';return}
  const bbox=[lon-size,lat-size,lon+size,lat+size];
  rasterButton.disabled=true;rasterStatus.textContent='Lecture des métadonnées GeoTIFF et téléchargement par plages HTTP Range…';rasterResults.innerHTML='';
+ let rasterStage='chargement des bibliothèques GeoTIFF/proj4';
  try{
   const [tiffModule,projModule]=await Promise.all([
    import('https://cdn.jsdelivr.net/npm/geotiff@2.1.3/+esm'),
@@ -238,9 +239,12 @@ rasterButton.addEventListener('click',async()=>{
   ]);
   const GeoTIFF=tiffModule;
   const proj4=projModule.default||projModule;
+  rasterStage='préparation de la projection de la zone';
   const crs=utmDefinition(lon,lat);
+  rasterStage='test HEAD/Range du relais Netlify sur la bande B4';
   rasterStatus.textContent='Test du relais HTTP sur la bande B4…';
   const probe=await probeAsset(assets.red.href);
+  rasterStage='lecture des bandes GeoTIFF B4, B5, B6 et QA_PIXEL';
   rasterStatus.textContent='Relais accessible (taille '+probe.total+' octets ; '+probe.contentRange+'). Lecture des bandes B4, B5, B6 et QA_PIXEL…';
   const [red,nir,swir,qa]=await Promise.all([
    readBand(GeoTIFF,assets.red.href,bbox,proj4,crs),
@@ -248,6 +252,7 @@ rasterButton.addEventListener('click',async()=>{
    readBand(GeoTIFF,assets.swir16.href,bbox,proj4,crs),
    readBand(GeoTIFF,assets.qa_pixel.href,bbox,proj4,crs)
   ]);
+  rasterStage='calcul des indices NDVI/NDMI et contrôle qualité';
   const n=Math.min(red.values.length,nir.values.length,swir.values.length,qa.values.length);
   const ndvi=[],ndmi=[];let rejected=0;
   for(let i=0;i<n;i++){
@@ -270,7 +275,7 @@ rasterButton.addEventListener('click',async()=>{
    '<p class="small-note"><strong>Interprétation :</strong> indices de surface uniquement. Ils ne détectent ni ne confirment une canalisation ou une fuite souterraine.</p>';
   rasterStatus.textContent='Lecture raster terminée : des pixels valides ont été lus depuis les GeoTIFF de cette scène.';
  }catch(err){
-  rasterStatus.textContent='Analyse raster non aboutie : '+(err?.message||String(err))+'. Vérifie le déploiement Netlify et le relais de ressources.';
+  rasterStatus.textContent='Échec à l’étape « '+rasterStage+' » — '+(err?.name||'Erreur')+' : '+(err?.message||String(err))+'. Aucun résultat raster validé.';
  }finally{rasterButton.disabled=false}
 });
 </script>
