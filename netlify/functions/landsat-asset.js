@@ -3,7 +3,7 @@ exports.handler = async (event) => {
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Range, Content-Type",
-    "Access-Control-Expose-Headers": "Accept-Ranges, Content-Range, Content-Length, Content-Type, ETag",
+    "Access-Control-Expose-Headers": "Accept-Ranges, Content-Range, Content-Length, Content-Type, ETag, X-Landsat-Upstream-Status, X-Landsat-Upstream-Content-Range, X-Landsat-Upstream-Length, X-Landsat-Upstream-Method",
     "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
     "Accept-Ranges": "bytes",
     "Cache-Control": "public, max-age=3600"
@@ -32,8 +32,10 @@ exports.handler = async (event) => {
     // Certains serveurs répondent 416 à HEAD ou au Range initial, avec la taille
     // totale dans Content-Range: bytes */TAILLE. On récupère cette taille si disponible.
     if (event.httpMethod === "HEAD") {
+      let upstreamMethod = "HEAD";
       let upstream = await fetch(parsed.toString(), { method: "HEAD" });
       if (!upstream.ok || !upstream.headers.get("content-length")) {
+        upstreamMethod = "GET Range bytes=0-0";
         upstream = await fetch(parsed.toString(), { method: "GET", headers: { Range: "bytes=0-0" } });
       }
 
@@ -46,6 +48,7 @@ exports.handler = async (event) => {
       out["x-landsat-upstream-status"] = String(upstream.status);
       out["x-landsat-upstream-content-range"] = contentRange || "absent";
       out["x-landsat-upstream-length"] = upstream.headers.get("content-length") || "absent";
+      out["x-landsat-upstream-method"] = upstreamMethod;
       const total = contentRange.match(/\/(\d+)$/)?.[1] ||
                     contentRange.match(/^bytes \*\/(\d+)$/i)?.[1];
       const length = total || upstream.headers.get("content-length");
