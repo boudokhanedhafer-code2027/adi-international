@@ -643,8 +643,8 @@ footer a:hover{color:var(--yellow)}
   </div>
 
   <div class="price-banner" role="note">
-    <h3 data-fr="🔥 TOUS NOS ARTICLES À MOINS DE 50 €" data-en="🔥 ALL OUR PRODUCTS UNDER €50">🔥 TOUS NOS ARTICLES À MOINS DE 50 €</h3>
-    <p data-fr="Prix du produit affiché séparément. Livraison à confirmer selon le fournisseur et la destination." data-en="Product price shown separately. Shipping to be confirmed according to supplier and destination.">Prix du produit affiché séparément. Livraison à confirmer selon le fournisseur et la destination.</p>
+    <h3 data-fr="PRIX DE VENTE ADI EN EUROS (€)" data-en="ADI SELLING PRICE IN EUROS (€)">PRIX DE VENTE ADI EN EUROS (€)</h3>
+    <p data-fr="Le client voit uniquement le prix de vente final ADI. Les coûts fournisseurs restent confidentiels." data-en="Customers see only the final ADI selling price. Supplier costs remain confidential.">Le client voit uniquement le prix de vente final ADI. Les coûts fournisseurs restent confidentiels.</p>
     <p data-fr="Tout article fournisseur doit être vérifié et approuvé par ADI avant publication. Aucun achat fournisseur ni dépense automatique." data-en="Every supplier item must be verified and approved by ADI before publication. No automatic supplier purchase or spending.">Tout article fournisseur doit être vérifié et approuvé par ADI avant publication. Aucun achat fournisseur ni dépense automatique.</p>
   </div>
 
@@ -929,7 +929,7 @@ function renderDraftCatalogue(){
     const cat=document.createElement("p");cat.className="draft-category";cat.textContent=lang==="fr"?p.category_fr:p.category_en;
     const title=document.createElement("h3");title.textContent=lang==="fr"?p.name_fr:p.name_en;
     const desc=document.createElement("p");desc.textContent=lang==="fr"?p.description_fr:p.description_en;
-    const price=document.createElement("div");price.className="draft-price";price.textContent=lang==="fr"?"Prix : à vérifier":"Price: to be verified";
+    const price=document.createElement("div");price.className="draft-price";price.textContent=lang==="fr"?"Prix de vente ADI : à confirmer":"ADI selling price: to be confirmed";
     card.append(top,img,imageLabel,cat,title,desc,price);grid.append(card);
   });
   document.getElementById("draftCount").textContent=lang==="fr"
