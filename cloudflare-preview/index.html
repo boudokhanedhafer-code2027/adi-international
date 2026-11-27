@@ -154,8 +154,8 @@ function inspectLandsatScene(index){
 $('aboboExample').onclick=()=>{$('pilotName').value='Marché central d’Abobo — exemple à confirmer';$('pilotLat').value='5.416';$('pilotLon').value='-4.020';$('pilotSize').value='0.03';$('landsatStatus').textContent='Exemple de zone chargé. Vérifie le nom et les coordonnées avant de lancer la recherche.'};
 $('clearLandsat').onclick=()=>{window.adiLandsatFeatures=[];window.adiSelectedLandsatIndex=null;$('analyzeLandsat').disabled=true;$('rasterSelection').textContent='Aucune scène sélectionnée.';$('rasterStatus').textContent='En attente d’une scène Landsat avec les bandes requises.';$('rasterResults').innerHTML='';$('landsatResults').textContent='Résultats effacés.';$('landsatStatus').textContent='Aucune recherche satellite affichée.'};
 $('landsatSearch').onclick=async()=>{
- const lat=Number($('pilotLat').value),lon=Number($('pilotLon').value),size=Number($('pilotSize').value),cloud=Number($('pilotCloud').value),start=$('pilotStart').value,end=$('pilotEnd').value,limit=Number($('pilotLimit').value);
- if(!Number.isFinite(lat)||lat < -90||lat>90||!Number.isFinite(lon)||lon < -180||lon>180||!Number.isFinite(size)||size<=0||size>2){$('landsatStatus').textContent='Coordonnées ou taille invalides. Renseigne latitude, longitude et demi-largeur.';return}
+ const latText=$('pilotLat').value.trim(),lonText=$('pilotLon').value.trim(),lat=Number(latText),lon=Number(lonText),size=Number($('pilotSize').value),cloud=Number($('pilotCloud').value),start=$('pilotStart').value,end=$('pilotEnd').value,limit=Number($('pilotLimit').value);
+ if(!latText||!lonText||!Number.isFinite(lat)||lat < -90||lat>90||!Number.isFinite(lon)||lon < -180||lon>180||!Number.isFinite(size)||size<=0||size>2||lon-size < -180||lon+size > 180||lat-size < -90||lat+size > 90){$('landsatStatus').textContent='Coordonnées ou emprise invalides. Renseigne latitude, longitude et demi-largeur sans dépasser les limites géographiques.';return}
  if(!start||!end||start>end||!Number.isFinite(cloud)||cloud<0||cloud>100){$('landsatStatus').textContent='Vérifie les dates et le pourcentage de nuages.';return}
  const bbox=[lon-size,lat-size,lon+size,lat+size],payload={collections:['landsat-c2l2-sr'],bbox,datetime:start+'T00:00:00Z/'+end+'T23:59:59Z',limit,query:{'eo:cloud_cover':{lte:cloud}}};
  window.adiLandsatFeatures=[];window.adiSelectedLandsatIndex=null;$('analyzeLandsat').disabled=true;$('rasterSelection').textContent='Aucune scène sélectionnée.';$('rasterStatus').textContent='En attente des résultats de recherche.';$('rasterResults').innerHTML='';$('landsatStatus').textContent='Recherche en cours via le relais Cloudflare Pages vers le catalogue USGS Landsat…';$('landsatResults').textContent='Chargement des scènes…';
@@ -227,8 +227,8 @@ rasterButton.addEventListener('click',async()=>{
  const required=['red','nir08','swir16','qa_pixel'];
  const missing=required.filter(k=>!assets[k]?.href);
  if(missing.length){rasterStatus.textContent='Analyse impossible : ressources absentes — '+missing.join(', ')+'.';return}
- const lat=Number(document.getElementById('pilotLat').value),lon=Number(document.getElementById('pilotLon').value),size=Number(document.getElementById('pilotSize').value);
- if(!Number.isFinite(lat)||!Number.isFinite(lon)||!Number.isFinite(size)||size<=0){rasterStatus.textContent='Coordonnées ou demi-largeur invalides.';return}
+ const latText=document.getElementById('pilotLat').value.trim(),lonText=document.getElementById('pilotLon').value.trim(),lat=Number(latText),lon=Number(lonText),size=Number(document.getElementById('pilotSize').value);
+ if(!latText||!lonText||!Number.isFinite(lat)||lat < -90||lat > 90||!Number.isFinite(lon)||lon < -180||lon > 180||!Number.isFinite(size)||size<=0||size>2||lon-size < -180||lon+size > 180||lat-size < -90||lat+size > 90){rasterStatus.textContent='Coordonnées ou emprise invalides. Vérifie latitude, longitude et demi-largeur.';return}
  const bbox=[lon-size,lat-size,lon+size,lat+size];
  rasterButton.disabled=true;rasterStatus.textContent='Lecture des métadonnées GeoTIFF et téléchargement par plages HTTP Range…';rasterResults.innerHTML='';
  let rasterStage='chargement des bibliothèques GeoTIFF/proj4';
