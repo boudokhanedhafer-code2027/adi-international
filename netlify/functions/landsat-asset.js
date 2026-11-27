@@ -28,26 +28,38 @@ exports.handler = async (event) => {
   }
 
   try {
-    // GeoTIFF.js first asks for file size. Some upstream gateways do not support HEAD,
-    // so emulate HEAD with a one-byte ranged GET when necessary.
+    // GeoTIFF.js demande la taille du fichier avant les plages de lecture.
+    // Certains serveurs répondent 416 à HEAD ou au Range initial, avec la taille
+    // totale dans Content-Range: bytes */TAILLE. On récupère cette taille si disponible.
     if (event.httpMethod === "HEAD") {
       let upstream = await fetch(parsed.toString(), { method: "HEAD" });
       if (!upstream.ok || !upstream.headers.get("content-length")) {
         upstream = await fetch(parsed.toString(), { method: "GET", headers: { Range: "bytes=0-0" } });
       }
-      if (!upstream.ok && upstream.status !== 206) {
-        return { statusCode: upstream.status, headers, body: "USGS metadata request failed (HEAD/range fallback)" };
-      }
+
       const out = { ...headers };
       for (const name of ["accept-ranges", "content-type", "etag", "last-modified"]) {
         const value = upstream.headers.get(name);
         if (value) out[name] = value;
       }
-      const contentRange = upstream.headers.get("content-range");
-      const total = contentRange && contentRange.match(/\/([0-9]+)$/)?.[1];
+      const contentRange = upstream.headers.get("content-range") || "";
+      const total = contentRange.match(/\\/(\\d+)$/)?.[1] ||
+                    contentRange.match(/^bytes \\*\\/(\\d+)$/i)?.[1];
       const length = total || upstream.headers.get("content-length");
       if (length) out["content-length"] = length;
       if (contentRange) out["content-range"] = contentRange;
+
+      if (upstream.status === 416 && length) {
+        return { statusCode: 200, headers: out, body: "" };
+      }
+      if (!upstream.ok && upstream.status !== 206) {
+        return {
+          statusCode: upstream.status,
+          headers: out,
+          body: "USGS HEAD/range metadata failed; upstream status " + upstream.status +
+                "; Content-Range: " + (contentRange || "absent")
+        };
+      }
       return { statusCode: 200, headers: out, body: "" };
     }
 
