@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#082b4c">
+<title>ADI WATER LEAK FINDER — V5.7 + LANDSAT</title>
+<style>
+:root{--navy:#082b4c;--blue:#0875df;--cyan:#23b8c7;--gold:#f2c94c;--bg:#f3f7fb;--card:#fff;--text:#14283d;--muted:#64788c;--line:#e1eaf2;--green:#17865b;--red:#b94b4b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+header{background:linear-gradient(120deg,#062642,#0b5790);color:white;padding:22px max(18px,calc((100% - 1180px)/2))}
+.brand{display:flex;align-items:center;gap:13px}.logo{width:48px;height:48px;border-radius:14px;background:#fff;color:var(--blue);display:grid;place-items:center;font-size:24px;font-weight:800}
+h1{font-size:clamp(20px,4vw,30px);margin:0}.subtitle{color:#d8e9f8;margin:7px 0 0;font-size:14px}
+.wrap{max-width:1180px;margin:auto;padding:20px 16px 40px}
+.notice{background:#fff8df;border:1px solid #f1dc8c;border-radius:12px;padding:13px 15px;margin-bottom:17px;font-size:13px;line-height:1.5}
+.toolbar{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0 18px}
+button,.filelabel{border:0;border-radius:9px;padding:11px 14px;font-weight:700;font-size:13px;cursor:pointer;background:var(--blue);color:#fff}
+button.secondary,.filelabel.secondary{background:#e8f1fa;color:#174a76}button.dark{background:var(--navy)}button:hover,.filelabel:hover{filter:brightness(.96)}
+input[type=file]{display:none}.status{font-size:12px;color:var(--muted);align-self:center}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 3px 12px #12334d08}
+.metric-label{font-size:12px;color:var(--muted);font-weight:700}.metric{font-size:25px;font-weight:800;margin:8px 0 4px;color:var(--navy)}.metric-sub{font-size:11px;color:var(--muted)}
+.section-title{font-size:17px;margin:22px 0 11px}.charts{display:grid;grid-template-columns:1fr 1fr;gap:13px}.chart-card{min-height:250px}.chart-title{font-size:14px;font-weight:700;margin-bottom:8px}.chart-note{font-size:11px;color:var(--muted);margin-top:5px}canvas{width:100%;height:190px;display:block}
+.stats-wrap{overflow-x:auto}.stats{width:100%;border-collapse:collapse;font-size:13px}.stats th,.stats td{text-align:left;padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}.stats th{color:var(--muted);font-size:11px;text-transform:uppercase}
+.table-wrap{overflow:auto;max-height:430px;border:1px solid var(--line);border-radius:12px;background:#fff}
+table.data{width:100%;border-collapse:collapse;font-size:12px;min-width:570px}table.data th,table.data td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--line)}table.data th{position:sticky;top:0;background:#edf4fa;color:#35516b}table.data th:first-child,table.data td:first-child{text-align:left}
+.footer{color:var(--muted);font-size:11px;text-align:center;padding:24px 8px}
+.pill{display:inline-block;border-radius:30px;padding:5px 9px;background:#e8f7ef;color:#16734e;font-size:11px;font-weight:700}
+input[type=text],input[type=number],input[type=date]{padding:10px;border:1px solid #cbd8e4;border-radius:8px;width:100%;font-size:14px}
+.landsat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field label{display:block;font-size:12px;font-weight:700;margin:8px 0 5px}
+.landsat-status{margin-top:12px;padding:11px;border-radius:9px;background:#eef5fb;font-size:12px;line-height:1.5;white-space:pre-wrap}
+.scene{border-top:1px solid var(--line);padding:12px 0;font-size:13px;overflow-wrap:anywhere}.scene:first-child{border-top:0}
+.scene a{color:#075fb5}.small-note{font-size:12px;color:var(--muted);line-height:1.5}
+@media(max-width:760px){.grid{grid-template-columns:repeat(2,1fr)}.charts{grid-template-columns:1fr}.wrap{padding:15px 12px 30px}.metric{font-size:22px}}
+@media(max-width:600px){.landsat-grid{grid-template-columns:1fr}}
+@media(max-width:360px){.grid{grid-template-columns:1fr 1fr}.toolbar button,.filelabel{flex:1;text-align:center}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="logo">ADI</div><div><h1>WATER LEAK FINDER <span style="color:#f2c94c">V5.7 + LANDSAT</span></h1><p class="subtitle">Tableau de bord d’analyse multispectrale — prototype local avec recherche de scènes Landsat</p></div></div>
+</header>
+<main class="wrap">
+  <div class="notice"><strong>Mode démonstration :</strong> les 100 lignes intégrées sont des données d’essai V5.7. Elles ne proviennent pas d’une acquisition satellite vérifiée et ne prouvent pas une fuite. Le module Landsat ci-dessous recherche des scènes dans le catalogue public ; il ne télécharge pas encore les bandes raster et ne calcule pas automatiquement les indices sur les pixels.</div>
+  <div class="toolbar">
+    <label class="filelabel" for="fileInput">Importer JSON / CSV</label><input id="fileInput" type="file" accept=".json,.csv,application/json,text/csv">
+    <button id="exportJson">Exporter JSON</button>
+    <button id="exportCsv" class="secondary">Exporter CSV</button>
+    <button id="reset" class="dark">Réinitialiser V5.7</button>
+    <span id="status" class="status">100 lignes de démonstration chargées.</span>
+  </div>
+  <section class="grid" id="metrics">
+    <div class="card"><div class="metric-label">NDVI moyen</div><div class="metric" id="mNdvi">—</div><div class="metric-sub">Indice de végétation — données chargées</div></div>
+    <div class="card"><div class="metric-label">Radar VV moyen</div><div class="metric" id="mVv">—</div><div class="metric-sub">Rétrodiffusion VV</div></div>
+    <div class="card"><div class="metric-label">Radar VH moyen</div><div class="metric" id="mVh">—</div><div class="metric-sub">Rétrodiffusion VH</div></div>
+    <div class="card"><div class="metric-label">Température moyenne</div><div class="metric" id="mTemp">—</div><div class="metric-sub">Degrés Celsius</div></div>
+  </section>
+  <h2 class="section-title">Module satellite — Landsat 8 / Landsat 9</h2>
+  <section class="card">
+    <p class="small-note">Choisis la zone pilote maintenant ou plus tard. La recherche interroge le catalogue STAC public Landsat Collection 2 Level-2. Les coordonnées définissent une petite emprise rectangulaire autour du centre choisi.</p>
+    <div class="landsat-grid">
+      <div class="field"><label for="pilotName">Nom de la zone pilote</label><input id="pilotName" type="text" placeholder="Ex. marché central d'Abobo" value=""></div>
+      <div class="field"><label for="pilotLat">Latitude du centre</label><input id="pilotLat" type="number" step="any" placeholder="Ex. 5.42"></div>
+      <div class="field"><label for="pilotLon">Longitude du centre</label><input id="pilotLon" type="number" step="any" placeholder="Ex. -4.02"></div>
+      <div class="field"><label for="pilotSize">Demi-largeur de la zone (degrés)</label><input id="pilotSize" type="number" min="0.001" max="2" step="0.001" value="0.03"></div>
+      <div class="field"><label for="pilotStart">Date de début</label><input id="pilotStart" type="date" value="2025-01-01"></div>
+      <div class="field"><label for="pilotEnd">Date de fin</label><input id="pilotEnd" type="date" value="2026-11-27"></div>
+      <div class="field"><label for="pilotCloud">Nuages maximum (%)</label><input id="pilotCloud" type="number" min="0" max="100" value="30"></div>
+      <div class="field"><label for="pilotLimit">Nombre maximal de scènes</label><select id="pilotLimit" style="width:100%;padding:10px;border:1px solid #cbd8e4;border-radius:8px"><option>10</option><option selected>25</option><option>50</option></select></div>
+    </div>
+    <div class="toolbar">
+      <button id="landsatSearch">Rechercher les scènes Landsat</button>
+      <button id="aboboExample" class="secondary">Charger exemple Abobo</button>
+      <button id="clearLandsat" class="secondary">Effacer résultats Landsat</button>
+    </div>
+    <div id="landsatStatus" class="landsat-status">Aucune recherche satellite effectuée. Tu peux choisir la zone pilote plus tard.</div>
+    <div id="landsatResults" class="small-note">Les scènes trouvées apparaîtront ici.</div>
+  </section>
+  <h2 class="section-title">Visualisation des indicateurs V5.7</h2>
+  <section class="charts">
+    <div class="card chart-card"><div class="chart-title">NDVI par ligne</div><canvas id="chartNdvi"></canvas><div class="chart-note">Valeurs de démonstration ou données importées</div></div>
+    <div class="card chart-card"><div class="chart-title">Radar VV et VH par ligne</div><canvas id="chartRadar"></canvas><div class="chart-note">Ces valeurs ne sont pas des acquisitions Sentinel vérifiées</div></div>
+    <div class="card chart-card"><div class="chart-title">Température par ligne</div><canvas id="chartTemp"></canvas><div class="chart-note">Température en °C</div></div>
+    <div class="card"><div class="chart-title">Statistiques descriptives</div><div class="stats-wrap"><table class="stats"><thead><tr><th>Indicateur</th><th>Min</th><th>Max</th><th>Moyenne</th><th>Écart-type</th><th>N</th></tr></thead><tbody id="statsBody"></tbody></table></div></div>
+  </section>
+  <h2 class="section-title">Données analysées <span class="pill" id="rowCount">100 lignes</span></h2>
+  <div class="table-wrap"><table class="data"><thead><tr><th>Ligne</th><th>NDVI</th><th>Radar VV</th><th>Radar VH</th><th>Température (°C)</th></tr></thead><tbody id="dataBody"></tbody></table></div>
+  <div class="footer">ADI INTERNATIONAL · WATER LEAK FINDER V5.7 + LANDSAT · Traitement local du tableau de bord. Catalogue satellite externe requis pour la recherche Landsat.</div>
+</main>
+<script>
+const demo=[];
+const ndviSeq=[0.3,0.3018867924528302,0.30357142857142855,0.3050847457627119,0.3064516129032258,0.3076923076923077,0.3088235294117647,0.30985915492957744,0.3108108108108108,0.3116883116883117];
+const vvSeq=[0.08,0.09,0.10,0.11,0.12,0.13,0.14],vhSeq=[0.025,0.030,0.035,0.040,0.045],tempSeq=[18,18.4,18.8,19.2,19.6,20,20.4,20.8,21.2,21.6,22,22.4,22.8];
+for(let i=0;i<100;i++)demo.push({row:i+1,ndvi:ndviSeq[i%10],vv:vvSeq[i%7],vh:vhSeq[i%5],temperature_c:tempSeq[i%13]});
+let rows=demo.map(x=>({...x}));
+const $=id=>document.getElementById(id),fmt=(n,d=4)=>Number(n).toFixed(d);
+function stats(key){const a=rows.map(r=>Number(r[key])).filter(Number.isFinite);if(!a.length)return null;const mean=a.reduce((s,v)=>s+v,0)/a.length,variance=a.reduce((s,v)=>s+(v-mean)**2,0)/a.length;return{count:a.length,min:Math.min(...a),max:Math.max(...a),mean,std:Math.sqrt(variance)}}
+function drawChart(canvasId,series,yMin=null,yMax=null){
+ const c=$(canvasId),rect=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1,w=Math.max(280,rect.width),h=190;c.width=w*dpr;c.height=h*dpr;
+ const ctx=c.getContext('2d');ctx.scale(dpr,dpr);const pad={l:42,r:12,t:12,b:25},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b,all=series.flatMap(s=>s.values).filter(Number.isFinite);if(!all.length)return;
+ let min=yMin===null?Math.min(...all):yMin,max=yMax===null?Math.max(...all):yMax;if(max===min){max+=1;min-=1}
+ const x=i=>pad.l+(series[0].values.length<=1?0:i/(series[0].values.length-1))*pw,y=v=>pad.t+(max-v)/(max-min)*ph;
+ ctx.font='10px Arial';ctx.strokeStyle='#e5edf4';ctx.fillStyle='#718398';ctx.lineWidth=1;
+ for(let k=0;k<=4;k++){const val=min+(max-min)*k/4,yy=y(val);ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(w-pad.r,yy);ctx.stroke();ctx.fillText(val.toFixed(2),4,yy+3)}
+ ctx.strokeStyle='#cbd8e4';ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,h-pad.b);ctx.lineTo(w-pad.r,h-pad.b);ctx.stroke();
+ series.forEach(s=>{ctx.strokeStyle=s.color;ctx.lineWidth=2;ctx.beginPath();s.values.forEach((v,i)=>{if(i===0)ctx.moveTo(x(i),y(v));else ctx.lineTo(x(i),y(v))});ctx.stroke()});
+ ctx.fillStyle='#718398';ctx.fillText('1',pad.l,h-7);ctx.fillText(String(series[0].values.length),w-pad.r-15,h-7);
+ let lx=pad.l;series.forEach(s=>{ctx.fillStyle=s.color;ctx.fillRect(lx,2,9,9);ctx.fillStyle='#52687c';ctx.fillText(s.name,lx+13,11);lx+=ctx.measureText(s.name).width+31});
+}
+function render(){
+ const keys=['ndvi','vv','vh','temperature_c'],labels=['NDVI','Radar VV','Radar VH','Température °C'],ss=keys.map(k=>stats(k));
+ $('mNdvi').textContent=ss[0]?fmt(ss[0].mean,4):'—';$('mVv').textContent=ss[1]?fmt(ss[1].mean,4):'—';$('mVh').textContent=ss[2]?fmt(ss[2].mean,4):'—';$('mTemp').textContent=ss[3]?fmt(ss[3].mean,2)+' °C':'—';
+ $('statsBody').innerHTML=ss.map((s,i)=>s?'<tr><td>'+labels[i]+'</td><td>'+fmt(s.min,4)+'</td><td>'+fmt(s.max,4)+'</td><td>'+fmt(s.mean,4)+'</td><td>'+fmt(s.std,4)+'</td><td>'+s.count+'</td></tr>':'').join('');
+ $('dataBody').innerHTML=rows.map(r=>'<tr><td>'+r.row+'</td><td>'+fmt(r.ndvi,6)+'</td><td>'+fmt(r.vv,4)+'</td><td>'+fmt(r.vh,4)+'</td><td>'+fmt(r.temperature_c,2)+'</td></tr>').join('');
+ $('rowCount').textContent=rows.length+' lignes';
+ drawChart('chartNdvi',[{name:'NDVI',values:rows.map(r=>r.ndvi),color:'#0875df'}],0.29,0.32);
+ drawChart('chartRadar',[{name:'VV',values:rows.map(r=>r.vv),color:'#0875df'},{name:'VH',values:rows.map(r=>r.vh),color:'#23a58a'}],0,0.16);
+ drawChart('chartTemp',[{name:'Température',values:rows.map(r=>r.temperature_c),color:'#d18a20'}],16,24);
+}
+function download(name,content,type){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+$('exportJson').onclick=()=>download('ADI_WATER_LEAK_FINDER_V5_7_resultats.json',JSON.stringify({version:'5.7',date:new Date().toISOString(),rows:rows.length,statistics:{ndvi:stats('ndvi'),radar_vv:stats('vv'),radar_vh:stats('vh'),temperature_c:stats('temperature_c')},results:rows},null,2),'application/json');
+$('exportCsv').onclick=()=>{const head='row,ndvi,vv,vh,temperature_c',body=rows.map(r=>[r.row,r.ndvi,r.vv,r.vh,r.temperature_c].join(',')).join('\n');download('ADI_WATER_LEAK_FINDER_V5_7.csv',head+'\n'+body,'text/csv;charset=utf-8')};
+$('reset').onclick=()=>{rows=demo.map(x=>({...x}));$('status').textContent='Données de démonstration V5.7 restaurées.';render()};
+$('fileInput').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const txt=await f.text();let parsed;if(f.name.toLowerCase().endsWith('.csv')){const lines=txt.trim().split(/\r?\n/),heads=lines.shift().split(',').map(x=>x.trim());parsed=lines.map(line=>{const v=line.split(','),o={};heads.forEach((h,i)=>o[h]=v[i]);return o})}else{const obj=JSON.parse(txt);parsed=Array.isArray(obj)?obj:(obj.results||obj.data||[])}
+ const clean=parsed.map((r,i)=>({row:Number(r.row??r.id??i+1),ndvi:Number(r.ndvi),vv:Number(r.vv??r.radar_vv),vh:Number(r.vh??r.radar_vh),temperature_c:Number(r.temperature_c??r.temperature)})).filter(r=>Object.values(r).every(Number.isFinite));
+ if(!clean.length)throw new Error('Aucune ligne valide trouvée.');rows=clean;$('status').textContent=clean.length+' lignes importées depuis '+f.name;render()
+ }catch(err){$('status').textContent='Import impossible : '+err.message}e.target.value=''};
+window.addEventListener('resize',()=>render());render();
+
+/* Module catalogue Landsat. La recherche de scènes est distincte des mesures de démonstration ci-dessus. */
+const stacEndpoint='https://landsatlook.usgs.gov/stac-server/search';
+function safeText(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+$('aboboExample').onclick=()=>{$('pilotName').value='Marché central d’Abobo — exemple à confirmer';$('pilotLat').value='5.416';$('pilotLon').value='-4.020';$('pilotSize').value='0.03';$('landsatStatus').textContent='Exemple de zone chargé. Vérifie le nom et les coordonnées avant de lancer la recherche.'};
+$('clearLandsat').onclick=()=>{$('landsatResults').textContent='Résultats effacés.';$('landsatStatus').textContent='Aucune recherche satellite affichée.'};
+$('landsatSearch').onclick=async()=>{
+ const lat=Number($('pilotLat').value),lon=Number($('pilotLon').value),size=Number($('pilotSize').value),cloud=Number($('pilotCloud').value),start=$('pilotStart').value,end=$('pilotEnd').value,limit=Number($('pilotLimit').value);
+ if(!Number.isFinite(lat)||lat < -90||lat>90||!Number.isFinite(lon)||lon < -180||lon>180||!Number.isFinite(size)||size<=0||size>2){$('landsatStatus').textContent='Coordonnées ou taille invalides. Renseigne latitude, longitude et demi-largeur.';return}
+ if(!start||!end||start>end||!Number.isFinite(cloud)||cloud<0||cloud>100){$('landsatStatus').textContent='Vérifie les dates et le pourcentage de nuages.';return}
+ const bbox=[lon-size,lat-size,lon+size,lat+size],payload={collections:['landsat-c2l2-sr'],bbox,datetime:start+'T00:00:00Z/'+end+'T23:59:59Z',limit,query:{'eo:cloud_cover':{lte:cloud}}};
+ $('landsatStatus').textContent='Recherche en cours dans le catalogue USGS Landsat…';$('landsatResults').textContent='Chargement des scènes…';
+ try{
+  const resp=await fetch(stacEndpoint,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/geo+json'},body:JSON.stringify(payload)});
+  if(!resp.ok)throw new Error('HTTP '+resp.status);
+  const data=await resp.json(),features=data.features||[];
+  $('landsatStatus').textContent=features.length+' scène(s) retournée(s) pour '+($('pilotName').value||'zone sans nom')+'.';
+  if(!features.length){$('landsatResults').textContent='Aucune scène trouvée avec ces critères. Essaie une période plus longue ou un seuil nuage plus élevé.';return}
+  $('landsatResults').innerHTML=features.map(f=>{
+   const p=f.properties||{},assets=f.assets||{},date=String(p.datetime||p.start_datetime||'').slice(0,10);
+   const links=Object.entries(assets).filter(([k,v])=>v&&v.href).slice(0,12).map(([k,v])=>'<a target="_blank" rel="noopener" href="'+safeText(v.href)+'">'+safeText(k)+'</a>').join(' · ');
+   return '<div class="scene"><strong>'+safeText(f.id||'Scène Landsat')+'</strong> <span class="pill">'+safeText(date||'date non précisée')+'</span><p class="small-note">Plateforme : '+safeText(p.platform||'Landsat')+' · Couverture nuageuse : '+safeText(p['eo:cloud_cover']??'non renseignée')+' %</p><p class="small-note">Identifiant scène : '+safeText(p['landsat:scene_id']||p['landsat:product_id']||'non fourni')+'</p><p>Liens de ressources : '+(links||'Le catalogue ne fournit pas de liens de bandes dans cette réponse.')+'</p></div>';
+  }).join('');
+ }catch(err){$('landsatStatus').textContent='Recherche non confirmée : '+err.message+'. Il peut s’agir d’un problème de connexion ou de blocage CORS du navigateur. Aucun résultat satellite n’a été validé.';$('landsatResults').textContent='Aucune donnée satellite importée. Le tableau V5.7 et ses données restent inchangés.'}
+};
+</script>
+</body>
+</html>
