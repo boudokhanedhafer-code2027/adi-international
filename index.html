@@ -774,6 +774,24 @@ footer a:hover{color:var(--yellow)}
       <input id="name" placeholder="Votre nom" required>
       <input id="email" type="email" placeholder="Votre adresse e-mail" required>
 
+      <label for="deliveryCountry"><span data-fr="Pays de livraison" data-en="Delivery country">Pays de livraison</span></label>
+      <input id="deliveryCountry" name="deliveryCountry" list="countrySuggestions" autocomplete="country-name" placeholder="Pays de livraison / Delivery country" required>
+      <datalist id="countrySuggestions">
+        <option value="Tunisie"></option><option value="France"></option><option value="Côte d’Ivoire"></option>
+        <option value="Algérie"></option><option value="Maroc"></option><option value="Sénégal"></option>
+        <option value="Émirats arabes unis"></option><option value="Arabie saoudite"></option>
+        <option value="Canada"></option><option value="États-Unis"></option><option value="Royaume-Uni"></option>
+        <option value="Allemagne"></option><option value="Italie"></option><option value="Espagne"></option>
+        <option value="Turquie"></option><option value="Chine"></option><option value="Inde"></option>
+        <option value="Autre pays"></option>
+      </datalist>
+      <label for="deliveryCity"><span data-fr="Ville" data-en="City">Ville</span></label>
+      <input id="deliveryCity" name="deliveryCity" autocomplete="address-level2" placeholder="Ville / City" required>
+      <label for="deliveryPostal"><span data-fr="Code postal (si applicable)" data-en="Postal code (if applicable)">Code postal (si applicable)</span></label>
+      <input id="deliveryPostal" name="deliveryPostal" autocomplete="postal-code" placeholder="Code postal / Postal code">
+
+      <p class="form-note" data-fr="La disponibilité de livraison, les frais, les délais, les taxes et les éventuelles restrictions seront vérifiés pour chaque destination. La saisie du pays ne garantit pas que le fournisseur livre dans ce pays." data-en="Delivery availability, costs, timing, taxes and possible restrictions will be checked for each destination. Entering a country does not guarantee that the supplier ships there.">La disponibilité de livraison, les frais, les délais, les taxes et les éventuelles restrictions seront vérifiés pour chaque destination.</p>
+
       <select id="category" required>
         <option value="">Choisir une catégorie</option>
         <option>Électronique</option>
