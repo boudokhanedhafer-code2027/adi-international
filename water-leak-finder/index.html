@@ -128,7 +128,7 @@ $('fileInput').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{con
 window.addEventListener('resize',()=>render());render();
 
 /* Module catalogue Landsat. La recherche de scènes est distincte des mesures de démonstration ci-dessus. */
-const stacEndpoint='https://landsatlook.usgs.gov/stac-server/search';
+const stacEndpoint='/.netlify/functions/landsat-search'; // Relais serveur Netlify : évite l'appel navigateur direct au catalogue.
 function safeText(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 $('aboboExample').onclick=()=>{$('pilotName').value='Marché central d’Abobo — exemple à confirmer';$('pilotLat').value='5.416';$('pilotLon').value='-4.020';$('pilotSize').value='0.03';$('landsatStatus').textContent='Exemple de zone chargé. Vérifie le nom et les coordonnées avant de lancer la recherche.'};
 $('clearLandsat').onclick=()=>{$('landsatResults').textContent='Résultats effacés.';$('landsatStatus').textContent='Aucune recherche satellite affichée.'};
@@ -137,7 +137,7 @@ $('landsatSearch').onclick=async()=>{
  if(!Number.isFinite(lat)||lat < -90||lat>90||!Number.isFinite(lon)||lon < -180||lon>180||!Number.isFinite(size)||size<=0||size>2){$('landsatStatus').textContent='Coordonnées ou taille invalides. Renseigne latitude, longitude et demi-largeur.';return}
  if(!start||!end||start>end||!Number.isFinite(cloud)||cloud<0||cloud>100){$('landsatStatus').textContent='Vérifie les dates et le pourcentage de nuages.';return}
  const bbox=[lon-size,lat-size,lon+size,lat+size],payload={collections:['landsat-c2l2-sr'],bbox,datetime:start+'T00:00:00Z/'+end+'T23:59:59Z',limit,query:{'eo:cloud_cover':{lte:cloud}}};
- $('landsatStatus').textContent='Recherche en cours dans le catalogue USGS Landsat…';$('landsatResults').textContent='Chargement des scènes…';
+ $('landsatStatus').textContent='Recherche en cours via le relais Netlify vers le catalogue USGS Landsat…';$('landsatResults').textContent='Chargement des scènes…';
  try{
   const resp=await fetch(stacEndpoint,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/geo+json'},body:JSON.stringify(payload)});
   if(!resp.ok)throw new Error('HTTP '+resp.status);
@@ -149,7 +149,7 @@ $('landsatSearch').onclick=async()=>{
    const links=Object.entries(assets).filter(([k,v])=>v&&v.href).slice(0,12).map(([k,v])=>'<a target="_blank" rel="noopener" href="'+safeText(v.href)+'">'+safeText(k)+'</a>').join(' · ');
    return '<div class="scene"><strong>'+safeText(f.id||'Scène Landsat')+'</strong> <span class="pill">'+safeText(date||'date non précisée')+'</span><p class="small-note">Plateforme : '+safeText(p.platform||'Landsat')+' · Couverture nuageuse : '+safeText(p['eo:cloud_cover']??'non renseignée')+' %</p><p class="small-note">Identifiant scène : '+safeText(p['landsat:scene_id']||p['landsat:product_id']||'non fourni')+'</p><p>Liens de ressources : '+(links||'Le catalogue ne fournit pas de liens de bandes dans cette réponse.')+'</p></div>';
   }).join('');
- }catch(err){$('landsatStatus').textContent='Recherche non confirmée : '+err.message+'. Il peut s’agir d’un problème de connexion ou de blocage CORS du navigateur. Aucun résultat satellite n’a été validé.';$('landsatResults').textContent='Aucune donnée satellite importée. Le tableau V5.7 et ses données restent inchangés.'}
+ }catch(err){$('landsatStatus').textContent='Recherche non confirmée : '+err.message+'. Le relais Netlify ou le catalogue USGS peut être indisponible. Ouvre la version Netlify du logiciel et réessaie. Aucun résultat satellite n’a été validé.';$('landsatResults').textContent='Aucune donnée satellite importée. Le tableau V5.7 et ses données restent inchangés.'}
 };
 </script>
 </body>
