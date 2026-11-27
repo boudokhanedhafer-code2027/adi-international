@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://boudokhanedhafer-code2027.github.io/adi-international/sitemap.xml
