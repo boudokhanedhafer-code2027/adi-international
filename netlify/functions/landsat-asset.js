@@ -1,12 +1,15 @@
 // Netlify Function: proxy HTTP Range pour les GeoTIFF COG Landsat USGS.
+const PROXY_VERSION = "2026-11-27-range-fix-1";
+
 exports.handler = async (event) => {
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Range, Content-Type",
-    "Access-Control-Expose-Headers": "Accept-Ranges, Content-Range, Content-Length, Content-Type, ETag, X-Landsat-Upstream-Status, X-Landsat-Upstream-Content-Range, X-Landsat-Upstream-Length, X-Landsat-Upstream-Method",
+    "Access-Control-Expose-Headers": "Accept-Ranges, Content-Range, Content-Length, Content-Type, ETag, X-Landsat-Upstream-Status, X-Landsat-Upstream-Content-Range, X-Landsat-Upstream-Length, X-Landsat-Upstream-Method, X-Landsat-Proxy-Version",
     "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
     "Accept-Ranges": "bytes",
-    "Cache-Control": "public, max-age=3600"
+    "Cache-Control": "no-store",
+    "X-Landsat-Proxy-Version": PROXY_VERSION
   };
   if (event.httpMethod === "OPTIONS") return { statusCode: 204, headers, body: "" };
   if (!["GET", "HEAD"].includes(event.httpMethod)) return { statusCode: 405, headers, body: "Method not allowed" };
@@ -28,50 +31,77 @@ exports.handler = async (event) => {
   }
 
   try {
-    // GeoTIFF.js demande la taille du fichier avant les plages de lecture.
-    // Certains serveurs répondent 416 à HEAD ou au Range initial, avec la taille
-    // totale dans Content-Range: bytes */TAILLE. On récupère cette taille si disponible.
     if (event.httpMethod === "HEAD") {
       let upstreamMethod = "HEAD";
       let upstream = await fetch(parsed.toString(), { method: "HEAD" });
-      if (!upstream.ok || !upstream.headers.get("content-length")) {
-        upstreamMethod = "GET Range bytes=0-0";
-        upstream = await fetch(parsed.toString(), { method: "GET", headers: { Range: "bytes=0-0" } });
+      let total = null;
+      let contentRange = upstream.headers.get("content-range") || "";
+
+      // A HEAD response is usable only when it supplies the complete object size.
+      if (upstream.status === 200 && upstream.headers.get("content-length")) {
+        total = upstream.headers.get("content-length");
+      } else {
+        // Some object gateways reject HEAD. Probe a small byte range and read
+        // the total size only from Content-Range, never from the partial length.
+        upstreamMethod = "GET Range bytes=0-16383";
+        upstream = await fetch(parsed.toString(), {
+          method: "GET",
+          headers: { Range: "bytes=0-16383", "Accept-Encoding": "identity", Accept: "image/tiff,*/*" }
+        });
+        contentRange = upstream.headers.get("content-range") || "";
+        total = contentRange.match(/^bytes\s+\d+-\d+\/(\d+)$/i)?.[1] ||
+                contentRange.match(/^bytes\s+\*\/(\d+)$/i)?.[1] || null;
+
+        if (upstream.status !== 206 && upstream.status !== 416) {
+          const out = { ...headers,
+            "x-landsat-upstream-status": String(upstream.status),
+            "x-landsat-upstream-content-range": contentRange || "absent",
+            "x-landsat-upstream-length": upstream.headers.get("content-length") || "absent",
+            "x-landsat-upstream-method": upstreamMethod
+          };
+          await upstream.body?.cancel();
+          return { statusCode: 502, headers: out, body: "USGS metadata probe failed; HTTP " + upstream.status };
+        }
+
+        // Retry the smallest legal range for gateways that reject larger probes.
+        if (!total && upstream.status === 416) {
+          await upstream.body?.cancel();
+          upstreamMethod = "GET Range bytes=0-0";
+          upstream = await fetch(parsed.toString(), {
+            method: "GET",
+            headers: { Range: "bytes=0-0", "Accept-Encoding": "identity", Accept: "image/tiff,*/*" }
+          });
+          contentRange = upstream.headers.get("content-range") || "";
+          total = contentRange.match(/^bytes\s+\d+-\d+\/(\d+)$/i)?.[1] ||
+                  contentRange.match(/^bytes\s+\*\/(\d+)$/i)?.[1] || null;
+        }
+        await upstream.body?.cancel();
       }
 
-      const out = { ...headers };
+      const out = { ...headers,
+        "x-landsat-upstream-status": String(upstream.status),
+        "x-landsat-upstream-content-range": contentRange || "absent",
+        "x-landsat-upstream-length": upstream.headers.get("content-length") || "absent",
+        "x-landsat-upstream-method": upstreamMethod
+      };
       for (const name of ["accept-ranges", "content-type", "etag", "last-modified"]) {
         const value = upstream.headers.get(name);
         if (value) out[name] = value;
       }
-      const contentRange = upstream.headers.get("content-range") || "";
-      out["x-landsat-upstream-status"] = String(upstream.status);
-      out["x-landsat-upstream-content-range"] = contentRange || "absent";
-      out["x-landsat-upstream-length"] = upstream.headers.get("content-length") || "absent";
-      out["x-landsat-upstream-method"] = upstreamMethod;
-      const total = contentRange.match(/\/(\d+)$/)?.[1] ||
-                    contentRange.match(/^bytes \*\/(\d+)$/i)?.[1];
-      const length = total || upstream.headers.get("content-length");
-      if (length) out["content-length"] = length;
-      if (contentRange) out["content-range"] = contentRange;
-
-      if (upstream.status === 416 && length) {
+      if (total) {
+        out["content-length"] = total;
         return { statusCode: 200, headers: out, body: "" };
       }
-      if (!upstream.ok && upstream.status !== 206) {
-        return {
-          statusCode: upstream.status,
-          headers: out,
-          body: "USGS HEAD/range metadata failed; upstream status " + upstream.status +
-                "; Content-Range: " + (contentRange || "absent")
-        };
-      }
-      return { statusCode: 200, headers: out, body: "" };
+      return {
+        statusCode: 502,
+        headers: out,
+        body: "USGS did not provide the complete GeoTIFF size in Content-Length or Content-Range."
+      };
     }
 
     const upstream = await fetch(parsed.toString(), {
       method: "GET",
-      headers: { Range: range, Accept: "image/tiff,*/*" }
+      headers: { Range: range, "Accept-Encoding": "identity", Accept: "image/tiff,*/*" }
     });
     const outHeaders = { ...headers };
     for (const name of ["accept-ranges", "content-range", "content-length", "content-type", "etag", "last-modified"]) {
@@ -79,12 +109,12 @@ exports.handler = async (event) => {
       if (value) outHeaders[name] = value;
     }
     if (upstream.status !== 206) {
-      return {
-        statusCode: upstream.status,
-        headers: outHeaders,
-        body: "USGS did not return partial content (expected HTTP 206)"
-      };
+      const detail = "USGS did not return partial content (expected HTTP 206); upstream HTTP " + upstream.status +
+        "; Content-Range: " + (upstream.headers.get("content-range") || "absent");
+      await upstream.body?.cancel();
+      return { statusCode: upstream.status === 416 ? 502 : upstream.status, headers: outHeaders, body: detail };
     }
+
     const buffer = Buffer.from(await upstream.arrayBuffer());
     if (buffer.length > 5 * 1024 * 1024) {
       return { statusCode: 413, headers: outHeaders, body: "Range response too large" };
