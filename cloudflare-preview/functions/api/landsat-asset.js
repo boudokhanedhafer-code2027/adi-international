@@ -9,7 +9,7 @@ const common = {
   "Cache-Control": "no-store",
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Range, Content-Type",
-  "Access-Control-Expose-Headers": "Accept-Ranges, Content-Range, Content-Length, Content-Type, ETag, Last-Modified, X-Landsat-Upstream-Status, X-Landsat-Upstream-Content-Range, X-Landsat-Upstream-Length, X-Landsat-Upstream-Method, X-Landsat-Redirects",
+  "Access-Control-Expose-Headers": "Accept-Ranges, Content-Range, Content-Length, Content-Type, ETag, Last-Modified, X-Landsat-Upstream-Status, X-Landsat-Upstream-Content-Range, X-Landsat-Upstream-Length, X-Landsat-Upstream-Method, X-Landsat-Redirects, X-Landsat-Relay-Error",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS"
 };
 
@@ -248,7 +248,13 @@ export async function onRequest({ request }) {
   } catch (error) {
     const message = error?.name === "TimeoutError"
       ? "USGS request timed out."
-      : String(error?.message || error).slice(0, 200);
-    return reply("Unable to retrieve Landsat raster range: " + message, 502);
+      : String(error?.message || error).replace(/[\\r\\n]+/g, " ").slice(0, 200);
+    return reply("Unable to retrieve Landsat raster range: " + message, 502, {
+      "X-Landsat-Upstream-Status": "unavailable",
+      "X-Landsat-Upstream-Content-Range": "absent",
+      "X-Landsat-Upstream-Length": "absent",
+      "X-Landsat-Upstream-Method": request.method,
+      "X-Landsat-Relay-Error": message
+    });
   }
 }
