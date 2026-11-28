@@ -104,6 +104,53 @@ function upstreamHeaders(response, redirectCount = 0) {
   return out;
 }
 
+async function readPrefix(body, limit) {
+  if (!body) return new Uint8Array();
+  const reader = body.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    while (total < limit) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const take = Math.min(value.byteLength, limit - total);
+      chunks.push(value.slice(0, take));
+      total += take;
+      if (take < value.byteLength || total >= limit) {
+        await reader.cancel("TIFF header prefix read");
+        break;
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const result = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return result;
+}
+
+function tiffSignature(bytes) {
+  if (!bytes || bytes.length < 4) return false;
+  const classicLE = bytes[0] === 0x49 && bytes[1] === 0x49 &&
+    bytes[2] === 0x2a && bytes[3] === 0x00;
+  const classicBE = bytes[0] === 0x4d && bytes[1] === 0x4d &&
+    bytes[2] === 0x00 && bytes[3] === 0x2a;
+  const bigLE = bytes[0] === 0x49 && bytes[1] === 0x49 &&
+    bytes[2] === 0x2b && bytes[3] === 0x00;
+  const bigBE = bytes[0] === 0x4d && bytes[1] === 0x4d &&
+    bytes[2] === 0x00 && bytes[3] === 0x2b;
+  return classicLE || classicBE || bigLE || bigBE;
+}
+
+function prefixHex(bytes) {
+  return Array.from(bytes || []).slice(0, 8)
+    .map(value => value.toString(16).padStart(2, "0")).join(" ");
+}
+
 function validTotal(value) {
   if (!value || !/^\d+$/.test(value)) return null;
   const total = Number(value);
@@ -152,38 +199,47 @@ export async function onRequest({ request }) {
 
   try {
     if (request.method === "HEAD") {
-      let method = "HEAD";
-      let result = await fetchUSGS(asset.toString(), { method: "HEAD" });
-      let upstream = result.response;
-      let total = upstream.status === 200
-        ? validTotal(upstream.headers.get("content-length"))
-        : null;
-
-      if (!total) {
-        await upstream.body?.cancel();
-        method = "GET Range bytes=0-0";
-        result = await fetchUSGS(asset.toString(), {
-          method: "GET",
-          headers: {
-            "Range": "bytes=0-0",
-            "Accept-Encoding": "identity",
-            "Accept": "image/tiff,*/*"
-          }
-        });
-        upstream = result.response;
-        const contentRange = upstream.headers.get("content-range") || "";
-        const match = /^bytes 0-0\/(\d+)$/i.exec(contentRange);
-        total = upstream.status === 206 && match ? validTotal(match[1]) : null;
-        await upstream.body?.cancel();
-      }
-
+      // Vérifie réellement le contenu : HEAD et Content-Length seuls ne prouvent pas un GeoTIFF.
+      const method = "GET Range bytes=0-15";
+      const result = await fetchUSGS(asset.toString(), {
+        method: "GET",
+        headers: {
+          "Range": "bytes=0-15",
+          "Accept-Encoding": "identity",
+          "Accept": "image/tiff,*/*"
+        }
+      });
+      const upstream = result.response;
       const headers = {
         ...upstreamHeaders(upstream, result.redirectCount),
         "X-Landsat-Upstream-Method": method
       };
-      if (!total) {
-        return reply("USGS did not provide a valid complete GeoTIFF size or returned an unsupported response.", 502, headers);
+
+      const prefix = await readPrefix(upstream.body, 16);
+      headers["X-Landsat-TIFF-Signature"] = prefixHex(prefix) || "unavailable";
+
+      const contentRange = upstream.headers.get("content-range") || "";
+      const match = /^bytes 0-15\\/(\\d+)$/i.exec(contentRange);
+      const total = match ? validTotal(match[1]) : null;
+      const isPartial = upstream.status === 206;
+      const hasExactPrefix = prefix.byteLength === 16;
+      const isTiff = tiffSignature(prefix);
+
+      if (!isPartial || !total || !hasExactPrefix || !isTiff) {
+        const contentType = upstream.headers.get("content-type") || "absent";
+        const reason = !isPartial
+          ? "USGS n'a pas respecté Range : HTTP " + upstream.status
+          : !total
+            ? "Content-Range absent ou invalide"
+            : !hasExactPrefix
+              ? "En-tête raster incomplet (" + prefix.byteLength + "/16 octets)"
+              : "Signature TIFF absente";
+        const detail = reason + "; Content-Type=" + contentType +
+          "; début=" + (headers["X-Landsat-TIFF-Signature"] || "unavailable");
+        headers["X-Landsat-Relay-Error, X-Landsat-TIFF-Signature] = detail;
+        return reply("Réponse USGS non validée comme GeoTIFF : " + detail, 502, headers);
       }
+
       headers["Content-Length"] = total;
       return reply(null, 200, headers);
     }
