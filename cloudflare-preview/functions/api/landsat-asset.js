@@ -9,7 +9,7 @@ const common = {
   "Cache-Control": "no-store",
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Range, Content-Type",
-  "Access-Control-Expose-Headers": "Accept-Ranges, Content-Range, Content-Length, Content-Type, ETag, Last-Modified, X-Landsat-Upstream-Status, X-Landsat-Upstream-Content-Range, X-Landsat-Upstream-Length, X-Landsat-Upstream-Method, X-Landsat-Redirects, X-Landsat-Relay-Error",
+  "Access-Control-Expose-Headers": "Accept-Ranges, Content-Range, Content-Length, Content-Type, ETag, Last-Modified, X-Landsat-Upstream-Status, X-Landsat-Upstream-Content-Range, X-Landsat-Upstream-Length, X-Landsat-Upstream-Method, X-Landsat-Redirects, X-Landsat-Relay-Error, X-Landsat-TIFF-Signature",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS"
 };
 
@@ -219,7 +219,7 @@ export async function onRequest({ request }) {
       headers["X-Landsat-TIFF-Signature"] = prefixHex(prefix) || "unavailable";
 
       const contentRange = upstream.headers.get("content-range") || "";
-      const match = /^bytes 0-15\\/(\\d+)$/i.exec(contentRange);
+      const match = /^bytes 0-15\/(\d+)$/i.exec(contentRange);
       const total = match ? validTotal(match[1]) : null;
       const isPartial = upstream.status === 206;
       const hasExactPrefix = prefix.byteLength === 16;
@@ -236,7 +236,7 @@ export async function onRequest({ request }) {
               : "Signature TIFF absente";
         const detail = reason + "; Content-Type=" + contentType +
           "; début=" + (headers["X-Landsat-TIFF-Signature"] || "unavailable");
-        headers["X-Landsat-Relay-Error, X-Landsat-TIFF-Signature] = detail;
+        headers["X-Landsat-Relay-Error"] = detail;
         return reply("Réponse USGS non validée comme GeoTIFF : " + detail, 502, headers);
       }
 
