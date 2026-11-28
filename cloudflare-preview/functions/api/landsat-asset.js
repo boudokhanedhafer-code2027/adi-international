@@ -1,18 +1,30 @@
 // Cloudflare Pages Function — relais HTTP Range borné pour les GeoTIFF Landsat USGS.
+// Les redirections sont suivies manuellement et uniquement vers des hôtes USGS/AWS S3 autorisés.
 const MAX_RANGE_BYTES = 3 * 1024 * 1024;
 const TIMEOUT_MS = 25000;
+const MAX_REDIRECTS = 4;
 
 const common = {
   "Accept-Ranges": "bytes",
   "Cache-Control": "no-store",
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Range, Content-Type",
-  "Access-Control-Expose-Headers": "Accept-Ranges, Content-Range, Content-Length, Content-Type, ETag, Last-Modified, X-Landsat-Upstream-Status, X-Landsat-Upstream-Content-Range, X-Landsat-Upstream-Length, X-Landsat-Upstream-Method",
+  "Access-Control-Expose-Headers": "Accept-Ranges, Content-Range, Content-Length, Content-Type, ETag, Last-Modified, X-Landsat-Upstream-Status, X-Landsat-Upstream-Content-Range, X-Landsat-Upstream-Length, X-Landsat-Upstream-Method, X-Landsat-Redirects",
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS"
 };
 
 function reply(body, status = 200, extra = {}) {
   return new Response(body, { status, headers: { ...common, ...extra } });
+}
+
+function isAllowedHost(hostname) {
+  const host = hostname.toLowerCase();
+  if (host === "landsatlook.usgs.gov" || host === "earthexplorer.usgs.gov") return true;
+  // Les objets Landsat peuvent être servis depuis des URL S3 présignées par USGS.
+  // N'accepte que les endpoints S3 AWS, jamais un hôte arbitraire.
+  if (/^[a-z0-9][a-z0-9.-]*\.s3\.amazonaws\.com$/.test(host)) return true;
+  if (/^[a-z0-9][a-z0-9.-]*\.s3\.[a-z0-9-]+\.amazonaws\.com$/.test(host)) return true;
+  return false;
 }
 
 function validAsset(value) {
@@ -24,6 +36,14 @@ function validAsset(value) {
     url.pathname.startsWith("/data/collection02/level-2/standard/oli-tirs/") &&
     url.pathname.toUpperCase().endsWith(".TIF");
   return allowed ? url : null;
+}
+
+function validRedirect(value) {
+  let url;
+  try { url = new URL(value); } catch { return null; }
+  if (url.protocol !== "https:" || url.port || url.username || url.password ||
+      !isAllowedHost(url.hostname)) return null;
+  return url;
 }
 
 function parseRange(value) {
@@ -72,11 +92,12 @@ async function readBounded(body, limit) {
   return result;
 }
 
-function upstreamHeaders(response) {
+function upstreamHeaders(response, redirectCount = 0) {
   const out = {
     "X-Landsat-Upstream-Status": String(response.status),
     "X-Landsat-Upstream-Content-Range": response.headers.get("content-range") || "absent",
-    "X-Landsat-Upstream-Length": response.headers.get("content-length") || "absent"
+    "X-Landsat-Upstream-Length": response.headers.get("content-length") || "absent",
+    "X-Landsat-Redirects": String(redirectCount)
   };
   for (const name of ["accept-ranges", "content-type", "etag", "last-modified"]) {
     const value = response.headers.get(name);
@@ -85,19 +106,37 @@ function upstreamHeaders(response) {
   return out;
 }
 
-// Ne suit jamais une redirection : l'hôte amont reste strictement celui autorisé.
-async function fetchUSGS(url, options) {
-  return fetch(url, {
-    ...options,
-    redirect: "manual",
-    signal: AbortSignal.timeout(TIMEOUT_MS)
-  });
-}
-
 function validTotal(value) {
   if (!value || !/^\d+$/.test(value)) return null;
   const total = Number(value);
   return Number.isSafeInteger(total) && total > 0 ? String(total) : null;
+}
+
+// Suit les redirections une par une. Chaque destination est validée avant toute requête.
+async function fetchUSGS(initialUrl, options) {
+  let current = new URL(initialUrl);
+  for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects++) {
+    if (!isAllowedHost(current.hostname) || current.protocol !== "https:" ||
+        current.port || current.username || current.password) {
+      throw new Error("Un hôte de redirection USGS non autorisé a été bloqué.");
+    }
+    const response = await fetch(current.toString(), {
+      ...options,
+      redirect: "manual",
+      signal: AbortSignal.timeout(TIMEOUT_MS)
+    });
+    if (![301, 302, 303, 307, 308].includes(response.status)) {
+      return { response, redirectCount: redirects };
+    }
+    const location = response.headers.get("location");
+    await response.body?.cancel();
+    if (!location) throw new Error("Redirection USGS sans en-tête Location.");
+    if (redirects === MAX_REDIRECTS) throw new Error("Trop de redirections USGS.");
+    const next = validRedirect(new URL(location, current).toString());
+    if (!next) throw new Error("Destination de redirection USGS non autorisée.");
+    current = next;
+  }
+  throw new Error("Redirection USGS impossible.");
 }
 
 export async function onRequest({ request }) {
@@ -112,8 +151,8 @@ export async function onRequest({ request }) {
   try {
     if (request.method === "HEAD") {
       let method = "HEAD";
-      let upstream = await fetchUSGS(asset.toString(), { method: "HEAD" });
-
+      let result = await fetchUSGS(asset.toString(), { method: "HEAD" });
+      let upstream = result.response;
       let total = upstream.status === 200
         ? validTotal(upstream.headers.get("content-length"))
         : null;
@@ -121,7 +160,7 @@ export async function onRequest({ request }) {
       if (!total) {
         await upstream.body?.cancel();
         method = "GET Range bytes=0-0";
-        upstream = await fetchUSGS(asset.toString(), {
+        result = await fetchUSGS(asset.toString(), {
           method: "GET",
           headers: {
             "Range": "bytes=0-0",
@@ -129,6 +168,7 @@ export async function onRequest({ request }) {
             "Accept": "image/tiff,*/*"
           }
         });
+        upstream = result.response;
         const contentRange = upstream.headers.get("content-range") || "";
         const match = /^bytes 0-0\/(\d+)$/i.exec(contentRange);
         total = upstream.status === 206 && match ? validTotal(match[1]) : null;
@@ -136,11 +176,11 @@ export async function onRequest({ request }) {
       }
 
       const headers = {
-        ...upstreamHeaders(upstream),
+        ...upstreamHeaders(upstream, result.redirectCount),
         "X-Landsat-Upstream-Method": method
       };
       if (!total) {
-        return reply("USGS did not provide a valid complete GeoTIFF size or attempted a redirect.", 502, headers);
+        return reply("USGS did not provide a valid complete GeoTIFF size or returned an unsupported response.", 502, headers);
       }
       headers["Content-Length"] = total;
       return reply(null, 200, headers);
@@ -150,7 +190,7 @@ export async function onRequest({ request }) {
     if (!range) return reply("A single valid byte Range header is required", 416);
     if (range.tooLarge) return reply("Requested byte range exceeds the 3 MiB limit", 413);
 
-    const upstream = await fetchUSGS(asset.toString(), {
+    const result = await fetchUSGS(asset.toString(), {
       method: "GET",
       headers: {
         "Range": "bytes=" + range.start + "-" + range.end,
@@ -158,8 +198,8 @@ export async function onRequest({ request }) {
         "Accept": "image/tiff,*/*"
       }
     });
-
-    const headers = upstreamHeaders(upstream);
+    const upstream = result.response;
+    const headers = upstreamHeaders(upstream, result.redirectCount);
     headers["X-Landsat-Upstream-Method"] = "GET Range";
 
     if (upstream.status !== 206) {
