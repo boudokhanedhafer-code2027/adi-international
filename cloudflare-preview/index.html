@@ -241,7 +241,7 @@ async function probeAsset(href){
  if(!safeHref)throw new Error('URL de ressource refusée : hôte ou chemin non autorisé.');
  const url=assetProxy+'?url='+encodeURIComponent(safeHref);
  const head=await fetch(url,{method:'HEAD'});
- if(!head.ok) throw new Error('Relais HEAD HTTP '+head.status+' ; amont='+head.headers.get('x-landsat-upstream-status')+' ; Content-Range='+head.headers.get('x-landsat-upstream-content-range')+' ; taille='+head.headers.get('x-landsat-upstream-length'));
+ if(!head.ok){const detail=(await head.text()).replace(/\\s+/g,' ').slice(0,240);throw new Error('Relais HEAD HTTP '+head.status+' ; amont='+head.headers.get('x-landsat-upstream-status')+' ; Content-Range='+head.headers.get('x-landsat-upstream-content-range')+' ; taille='+head.headers.get('x-landsat-upstream-length')+' ; détail='+detail);}
  const total=head.headers.get('content-length')||'inconnu';
  const range=await fetch(url,{headers:{Range:'bytes=0-15'}});
  if(range.status!==206) throw new Error('Lecture Range HTTP '+range.status+' (206 attendu) : '+(await range.text()).slice(0,180));
