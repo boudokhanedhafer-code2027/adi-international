@@ -19,7 +19,7 @@ function reply(body, status = 200, extra = {}) {
 
 function isAllowedHost(hostname) {
   const host = hostname.toLowerCase();
-  if (host === "landsatlook.usgs.gov" || host === "earthexplorer.usgs.gov") return true;
+  if (host === "landsatlook.usgs.gov" || host === "earthexplorer.usgs.gov" || host === "ers.cr.usgs.gov") return true;
   if (/^[a-z0-9][a-z0-9.-]*\.s3\.amazonaws\.com$/.test(host)) return true;
   if (/^[a-z0-9][a-z0-9.-]*\.s3\.[a-z0-9-]+\.amazonaws\.com$/.test(host)) return true;
   return false;
