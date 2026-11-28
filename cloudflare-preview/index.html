@@ -64,7 +64,7 @@ input[type=text],input[type=number],input[type=date]{padding:10px;border:1px sol
       <div class="field"><label for="pilotLon">Longitude du centre</label><input id="pilotLon" type="number" step="any" placeholder="Ex. -4.02"></div>
       <div class="field"><label for="pilotSize">Demi-largeur de la zone (degrés)</label><input id="pilotSize" type="number" min="0.001" max="2" step="0.001" value="0.03"></div>
       <div class="field"><label for="pilotStart">Date de début</label><input id="pilotStart" type="date" value="2025-01-01"></div>
-      <div class="field"><label for="pilotEnd">Date de fin</label><input id="pilotEnd" type="date" value="2026-11-27"></div>
+      <div class="field"><label for="pilotEnd">Date de fin</label><input id="pilotEnd" type="date" value="2026-11-28"></div>
       <div class="field"><label for="pilotCloud">Nuages maximum (%)</label><input id="pilotCloud" type="number" min="0" max="100" value="30"></div>
       <div class="field"><label for="pilotLimit">Nombre maximal de scènes</label><select id="pilotLimit" style="width:100%;padding:10px;border:1px solid #cbd8e4;border-radius:8px"><option>10</option><option selected>25</option><option>50</option></select></div>
     </div>
@@ -250,7 +250,7 @@ async function probeAsset(href){
  if(bytes.byteLength!==16) throw new Error('Bloc raster incomplet : '+bytes.byteLength+' octets reçus, 16 attendus.');
  return {total,contentRange:cr};
 }
-async function readBand(GeoTIFF,href,bbox,proj4,crs){
+async function readBand(GeoTIFF,href,bbox,proj4){
  const safeHref=safeLandsatAssetUrl(href);
  if(!safeHref)throw new Error('URL de ressource refusée : hôte ou chemin non autorisé.');
  const url=assetProxy+'?url='+encodeURIComponent(safeHref);
@@ -259,7 +259,9 @@ async function readBand(GeoTIFF,href,bbox,proj4,crs){
  const nativeCrs=imageCrs(image);
  const window=makeWindow(image,bbox,proj4,nativeCrs);
  const rasters=await image.readRasters({window,width:64,height:64,interleave:false});
- return {values:rasters[0],crs:nativeCrs,bbox:image.getBoundingBox(),imageWidth:image.getWidth(),imageHeight:image.getHeight()};
+ const values=rasters[0];
+ if(!values||values.length!==64*64)throw new Error('Échantillon GeoTIFF incomplet : 4096 cellules attendues, '+(values?.length??0)+' reçues.');
+ return {values,crs:nativeCrs,bbox:image.getBoundingBox(),window,imageWidth:image.getWidth(),imageHeight:image.getHeight(),origin:image.getOrigin(),resolution:image.getResolution()};
 }
 rasterButton.addEventListener('click',async()=>{
  const index=window.adiSelectedLandsatIndex;
@@ -289,15 +291,16 @@ rasterButton.addEventListener('click',async()=>{
   rasterStage='lecture des bandes GeoTIFF B4, B5, B6 et QA_PIXEL';
   rasterStatus.textContent='Relais accessible (taille '+probe.total+' octets ; '+probe.contentRange+'). Lecture des bandes B4, B5, B6 et QA_PIXEL…';
   const [red,nir,swir,qa]=await Promise.all([
-   readBand(GeoTIFF,assets.red.href,bbox,proj4,crs),
-   readBand(GeoTIFF,assets.nir08.href,bbox,proj4,crs),
-   readBand(GeoTIFF,assets.swir16.href,bbox,proj4,crs),
-   readBand(GeoTIFF,assets.qa_pixel.href,bbox,proj4,crs)
+   readBand(GeoTIFF,assets.red.href,bbox,proj4),
+   readBand(GeoTIFF,assets.nir08.href,bbox,proj4),
+   readBand(GeoTIFF,assets.swir16.href,bbox,proj4),
+   readBand(GeoTIFF,assets.qa_pixel.href,bbox,proj4)
   ]);
   rasterStage='calcul des indices NDVI/NDMI et contrôle qualité';
   const bands=[red,nir,swir,qa],reference=red;
-  if(bands.some(b=>b.crs!==reference.crs||b.values.length!==reference.values.length||b.imageWidth!==reference.imageWidth||b.imageHeight!==reference.imageHeight||b.bbox.some((v,i)=>Math.abs(v-reference.bbox[i])>0.01))){
-   throw new Error('Les GeoTIFF des bandes n’ont pas le même CRS, les mêmes dimensions ou la même emprise. Calcul pixel à pixel annulé.');
+  const sameArray=(a,b,tolerance=0)=>Array.isArray(a)&&Array.isArray(b)&&a.length===b.length&&a.every((v,i)=>Number.isFinite(v)&&Number.isFinite(b[i])&&Math.abs(v-b[i])<=tolerance);
+  if(bands.some(b=>b.crs!==reference.crs||b.values.length!==reference.values.length||b.imageWidth!==reference.imageWidth||b.imageHeight!==reference.imageHeight||!sameArray(b.bbox,reference.bbox,0.000001)||!sameArray(b.window,reference.window)||!sameArray(b.origin,reference.origin,0.000001)||!sameArray(b.resolution,reference.resolution,0.000000001))){
+   throw new Error('Les GeoTIFF des bandes ne partagent pas exactement le même CRS, la même emprise, la même fenêtre de pixels et la même résolution. Calcul pixel à pixel annulé.');
   }
   const n=reference.values.length;
   const ndvi=[],ndmi=[];let rejected=0;
