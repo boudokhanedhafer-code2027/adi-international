@@ -135,15 +135,15 @@ function parseCsv(text){
   if(quoted){if(ch==='"'&&text[i+1]==='"'){field+='"';i++}else if(ch==='"')quoted=false;else field+=ch}
   else if(ch==='"'){if(field.length)throw new Error('Guillemet CSV inattendu.');quoted=true}
   else if(ch===','){row.push(field);field=''}
-  else if(ch==='\\n'){row.push(field);out.push(row);row=[];field=''}
-  else if(ch==='\\r'){if(text[i+1]==='\\n')continue;row.push(field);out.push(row);row=[];field=''}
+  else if(ch==='\n'){row.push(field);out.push(row);row=[];field=''}
+  else if(ch==='\r'){if(text[i+1]==='\n')continue;row.push(field);out.push(row);row=[];field=''}
   else field+=ch;
  }
  if(quoted)throw new Error('Champ CSV entre guillemets non terminé.');
  if(field.length||row.length){row.push(field);out.push(row)}
  while(out.length&&out[out.length-1].every(v=>v.trim()===''))out.pop();
  if(!out.length)throw new Error('CSV vide.');
- const headers=out.shift().map(v=>v.trim().replace(/^\\uFEFF/,''));
+ const headers=out.shift().map(v=>v.trim().replace(/^\uFEFF/,''));
  const aliases={vv:['vv','radar_vv'],vh:['vh','radar_vh'],temperature_c:['temperature_c','temperature']};
  for(const key of ['ndvi','vv','vh','temperature_c'])if(!(key==='ndvi'?headers.includes(key):aliases[key].some(a=>headers.includes(a))))throw new Error('Colonne obligatoire absente : '+key);
  return out.filter(r=>r.some(v=>v.trim()!=='')).map(values=>{const o={};headers.forEach((h,j)=>o[h]=values[j]??'');return o});
