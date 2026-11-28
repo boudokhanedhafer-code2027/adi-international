@@ -20,8 +20,6 @@ function reply(body, status = 200, extra = {}) {
 function isAllowedHost(hostname) {
   const host = hostname.toLowerCase();
   if (host === "landsatlook.usgs.gov" || host === "earthexplorer.usgs.gov") return true;
-  // Les objets Landsat peuvent être servis depuis des URL S3 présignées par USGS.
-  // N'accepte que les endpoints S3 AWS, jamais un hôte arbitraire.
   if (/^[a-z0-9][a-z0-9.-]*\.s3\.amazonaws\.com$/.test(host)) return true;
   if (/^[a-z0-9][a-z0-9.-]*\.s3\.[a-z0-9-]+\.amazonaws\.com$/.test(host)) return true;
   return false;
@@ -118,7 +116,7 @@ async function fetchUSGS(initialUrl, options) {
   for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects++) {
     if (!isAllowedHost(current.hostname) || current.protocol !== "https:" ||
         current.port || current.username || current.password) {
-      throw new Error("Un hôte de redirection USGS non autorisé a été bloqué.");
+      throw new Error("Un hôte de redirection USGS non autorisé a été bloqué (hôte: " + current.hostname.toLowerCase() + ").");
     }
     const response = await fetch(current.toString(), {
       ...options,
@@ -132,8 +130,12 @@ async function fetchUSGS(initialUrl, options) {
     await response.body?.cancel();
     if (!location) throw new Error("Redirection USGS sans en-tête Location.");
     if (redirects === MAX_REDIRECTS) throw new Error("Trop de redirections USGS.");
-    const next = validRedirect(new URL(location, current).toString());
-    if (!next) throw new Error("Destination de redirection USGS non autorisée.");
+    const destination = new URL(location, current);
+    const next = validRedirect(destination.toString());
+    if (!next) {
+      throw new Error("Destination de redirection USGS non autorisée (hôte: " +
+        destination.hostname.toLowerCase() + ").");
+    }
     current = next;
   }
   throw new Error("Redirection USGS impossible.");
@@ -248,7 +250,7 @@ export async function onRequest({ request }) {
   } catch (error) {
     const message = error?.name === "TimeoutError"
       ? "USGS request timed out."
-      : String(error?.message || error).replace(/[\\r\\n]+/g, " ").slice(0, 200);
+      : String(error?.message || error).replace(/[\r\n]+/g, " ").slice(0, 200);
     return reply("Unable to retrieve Landsat raster range: " + message, 502, {
       "X-Landsat-Upstream-Status": "unavailable",
       "X-Landsat-Upstream-Content-Range": "absent",
