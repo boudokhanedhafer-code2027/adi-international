@@ -129,26 +129,54 @@ function download(name,content,type){const blob=new Blob([content],{type}),url=U
 $('exportJson').onclick=()=>download('ADI_WATER_LEAK_FINDER_V5_7_resultats.json',JSON.stringify({version:'5.7',date:new Date().toISOString(),rows:rows.length,statistics:{ndvi:stats('ndvi'),radar_vv:stats('vv'),radar_vh:stats('vh'),temperature_c:stats('temperature_c')},results:rows},null,2),'application/json');
 $('exportCsv').onclick=()=>{const head='row,ndvi,vv,vh,temperature_c',body=rows.map(r=>[r.row,r.ndvi,r.vv,r.vh,r.temperature_c].join(',')).join('\n');download('ADI_WATER_LEAK_FINDER_V5_7.csv',head+'\n'+body,'text/csv;charset=utf-8')};
 $('reset').onclick=()=>{rows=demo.map(x=>({...x}));$('status').textContent='Données de démonstration V5.7 restaurées.';render()};
-$('fileInput').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const txt=await f.text();let parsed;if(f.name.toLowerCase().endsWith('.csv')){const lines=txt.trim().split(/\r?\n/),heads=lines.shift().split(',').map(x=>x.trim());parsed=lines.map(line=>{const v=line.split(','),o={};heads.forEach((h,i)=>o[h]=v[i]);return o})}else{const obj=JSON.parse(txt);parsed=Array.isArray(obj)?obj:(obj.results||obj.data||[])}
- const clean=parsed.map((r,i)=>({row:Number(r.row??r.id??i+1),ndvi:Number(r.ndvi),vv:Number(r.vv??r.radar_vv),vh:Number(r.vh??r.radar_vh),temperature_c:Number(r.temperature_c??r.temperature)})).filter(r=>Object.values(r).every(Number.isFinite));
- if(!clean.length)throw new Error('Aucune ligne valide trouvée.');rows=clean;$('status').textContent=clean.length+' lignes importées depuis '+f.name;render()
+function parseCsv(text){
+ const out=[];let row=[],field='',quoted=false;
+ for(let i=0;i<text.length;i++){const ch=text[i];
+  if(quoted){if(ch==='"'&&text[i+1]==='"'){field+='"';i++}else if(ch==='"')quoted=false;else field+=ch}
+  else if(ch==='"'){if(field.length)throw new Error('Guillemet CSV inattendu.');quoted=true}
+  else if(ch===','){row.push(field);field=''}
+  else if(ch==='\\n'){row.push(field);out.push(row);row=[];field=''}
+  else if(ch==='\\r'){if(text[i+1]==='\\n')continue;row.push(field);out.push(row);row=[];field=''}
+  else field+=ch;
+ }
+ if(quoted)throw new Error('Champ CSV entre guillemets non terminé.');
+ if(field.length||row.length){row.push(field);out.push(row)}
+ while(out.length&&out[out.length-1].every(v=>v.trim()===''))out.pop();
+ if(!out.length)throw new Error('CSV vide.');
+ const headers=out.shift().map(v=>v.trim().replace(/^\\uFEFF/,''));
+ const aliases={vv:['vv','radar_vv'],vh:['vh','radar_vh'],temperature_c:['temperature_c','temperature']};
+ for(const key of ['ndvi','vv','vh','temperature_c'])if(!(key==='ndvi'?headers.includes(key):aliases[key].some(a=>headers.includes(a))))throw new Error('Colonne obligatoire absente : '+key);
+ return out.filter(r=>r.some(v=>v.trim()!=='')).map(values=>{const o={};headers.forEach((h,j)=>o[h]=values[j]??'');return o});
+}
+$('fileInput').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const txt=await f.text();let parsed;if(f.name.toLowerCase().endsWith('.csv'))parsed=parseCsv(txt);else{const obj=JSON.parse(txt);parsed=Array.isArray(obj)?obj:(obj.results||obj.data||[])}
+ if(!Array.isArray(parsed)||!parsed.length)throw new Error('Aucune ligne trouvée.');
+ const clean=parsed.map((r,i)=>{const pick=(...names)=>{for(const n of names)if(r[n]!==undefined&&r[n]!==null&&String(r[n]).trim()!=='')return Number(r[n]);return NaN};
+ return {row:(pick('row','id')||i+1),ndvi:pick('ndvi'),vv:pick('vv','radar_vv'),vh:pick('vh','radar_vh'),temperature_c:pick('temperature_c','temperature')}});
+ const invalid=clean.findIndex(r=>!Object.values(r).every(Number.isFinite));
+ if(invalid!==-1)throw new Error('Ligne '+(invalid+2)+' incomplète ou non numérique. Les champs vides ne sont pas convertis en zéro.');
+ rows=clean;$('status').textContent=clean.length+' lignes importées depuis '+f.name;render()
  }catch(err){$('status').textContent='Import impossible : '+err.message}e.target.value=''};
 window.addEventListener('resize',()=>render());render();
 
 /* V6.0 : recherche catalogue, inspection des ressources et échantillonnage raster réel séparé de la démonstration. */
 const stacEndpoint='/api/landsat-search'; // Relais Cloudflare Pages Function.
 function safeText(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function safeLandsatAssetUrl(value){
+ try{const u=new URL(value);if(u.protocol!=='https:'||u.hostname!=='landsatlook.usgs.gov'||u.port||u.username||u.password)return null;
+ if(!u.pathname.startsWith('/data/collection02/level-2/standard/oli-tirs/')||!u.pathname.toUpperCase().endsWith('.TIF'))return null;return u.href}catch(_){return null}
+}
 function inspectLandsatScene(index){
  const f=(window.adiLandsatFeatures||[])[index];if(!f)return;
  window.adiSelectedLandsatIndex=index;
  $('rasterSelection').textContent=(f.id||'Scène sélectionnée')+' — prête pour analyse raster';
  $('analyzeLandsat').disabled=false;
  const target=$('sceneAssets'+index),assets=f.assets||{};
- const entries=Object.entries(assets).filter(([k,v])=>v&&v.href);
+ const entries=Object.entries(assets).filter(([k,v])=>v&&safeLandsatAssetUrl(v.href));
  if(!entries.length){target.textContent='Aucune ressource détaillée fournie par le catalogue.';return}
  target.innerHTML='<strong>Ressources disponibles ('+entries.length+') :</strong><ul>'+entries.map(([k,v])=>{
   const title=v.title||k,media=v.type||v.media_type||'type non précisé';
-  return '<li><strong>'+safeText(k)+'</strong> — '+safeText(title)+' <span class="small-note">('+safeText(media)+')</span> : <a target="_blank" rel="noopener" href="'+safeText(v.href)+'">ouvrir la ressource</a></li>';
+  const safeHref=safeLandsatAssetUrl(v.href);
+  return '<li><strong>'+safeText(k)+'</strong> — '+safeText(title)+' <span class="small-note">('+safeText(media)+')</span> : <a target="_blank" rel="noopener noreferrer" href="'+safeText(safeHref)+'">ouvrir la ressource</a></li>';
  }).join('')+'</ul><p class="small-note">Ouvrir une ressource permet de consulter le fichier ou ses métadonnées. Cette étape ne signifie pas que les pixels ont été téléchargés ni analysés.</p>';
 }
 $('aboboExample').onclick=()=>{$('pilotName').value='Marché central d’Abobo — exemple à confirmer';$('pilotLat').value='5.416';$('pilotLon').value='-4.020';$('pilotSize').value='0.03';$('landsatStatus').textContent='Exemple de zone chargé. Vérifie le nom et les coordonnées avant de lancer la recherche.'};
@@ -182,10 +210,11 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const assetProxy='/api/landsat-asset';
 function stats(a){return a.length?{n:a.length,min:Math.min(...a),max:Math.max(...a),mean:a.reduce((s,v)=>s+v,0)/a.length}:null}
 function fmt(v){return v===null||!Number.isFinite(v)?'—':v.toFixed(4)}
-function utmDefinition(lon,lat){
- if(lat < -80 || lat > 84) throw new Error('Latitude hors de la couverture UTM prise en charge.');
- const zone=Math.max(1,Math.min(60,Math.floor((lon+180)/6)+1));
- return '+proj=utm +zone='+zone+(lat<0?' +south':'')+' +datum=WGS84 +units=m +no_defs';
+function imageCrs(image){
+ const keys=image.getGeoKeys()||{};
+ const code=Number(keys.ProjectedCSTypeGeoKey);
+ if(!Number.isInteger(code)||code<=0||code===32767)throw new Error('Code EPSG projeté absent ou non pris en charge dans les GeoKeys du GeoTIFF.');
+ return 'EPSG:'+code;
 }
 function makeWindow(image,bbox,proj4,crs){
  const [west,south,east,north]=bbox;
@@ -200,7 +229,9 @@ function makeWindow(image,bbox,proj4,crs){
  return [left,top,right,bottom];
 }
 async function probeAsset(href){
- const url=assetProxy+'?url='+encodeURIComponent(href);
+ const safeHref=safeLandsatAssetUrl(href);
+ if(!safeHref)throw new Error('URL de ressource refusée : hôte ou chemin non autorisé.');
+ const url=assetProxy+'?url='+encodeURIComponent(safeHref);
  const head=await fetch(url,{method:'HEAD'});
  if(!head.ok) throw new Error('Relais HEAD HTTP '+head.status+' ; amont='+head.headers.get('x-landsat-upstream-status')+' ; Content-Range='+head.headers.get('x-landsat-upstream-content-range')+' ; taille='+head.headers.get('x-landsat-upstream-length'));
  const total=head.headers.get('content-length')||'inconnu';
@@ -212,12 +243,15 @@ async function probeAsset(href){
  return {total,contentRange:cr};
 }
 async function readBand(GeoTIFF,href,bbox,proj4,crs){
- const url=assetProxy+'?url='+encodeURIComponent(href);
+ const safeHref=safeLandsatAssetUrl(href);
+ if(!safeHref)throw new Error('URL de ressource refusée : hôte ou chemin non autorisé.');
+ const url=assetProxy+'?url='+encodeURIComponent(safeHref);
  const tiff=await GeoTIFF.fromUrl(url,{allowFullFile:false});
  const image=await tiff.getImage();
- const window=makeWindow(image,bbox,proj4,crs);
+ const nativeCrs=imageCrs(image);
+ const window=makeWindow(image,bbox,proj4,nativeCrs);
  const rasters=await image.readRasters({window,width:64,height:64,interleave:false});
- return {values:rasters[0]};
+ return {values:rasters[0],crs:nativeCrs,bbox:image.getBoundingBox(),imageWidth:image.getWidth(),imageHeight:image.getHeight()};
 }
 rasterButton.addEventListener('click',async()=>{
  const index=window.adiSelectedLandsatIndex;
@@ -225,7 +259,7 @@ rasterButton.addEventListener('click',async()=>{
  if(!feature){rasterStatus.textContent='Sélectionne d’abord une scène Landsat.';return}
  const assets=feature.assets||{};
  const required=['red','nir08','swir16','qa_pixel'];
- const missing=required.filter(k=>!assets[k]?.href);
+ const missing=required.filter(k=>!assets[k]?.href||!safeLandsatAssetUrl(assets[k].href));
  if(missing.length){rasterStatus.textContent='Analyse impossible : ressources absentes — '+missing.join(', ')+'.';return}
  const latText=document.getElementById('pilotLat').value.trim(),lonText=document.getElementById('pilotLon').value.trim(),lat=Number(latText),lon=Number(lonText),size=Number(document.getElementById('pilotSize').value);
  if(!latText||!lonText||!Number.isFinite(lat)||lat < -90||lat > 90||!Number.isFinite(lon)||lon < -180||lon > 180||!Number.isFinite(size)||size<=0||size>2||lon-size < -180||lon+size > 180||lat-size < -90||lat+size > 90){rasterStatus.textContent='Coordonnées ou emprise invalides. Vérifie latitude, longitude et demi-largeur.';return}
@@ -239,8 +273,8 @@ rasterButton.addEventListener('click',async()=>{
   ]);
   const GeoTIFF=tiffModule;
   const proj4=projModule.default||projModule;
-  rasterStage='préparation de la projection de la zone';
-  const crs=utmDefinition(lon,lat);
+  rasterStage='lecture du CRS natif des GeoTIFF';
+  rasterStatus.textContent='La projection sera lue dans les GeoKeys de chaque GeoTIFF ; aucune projection UTM supposée ne sera appliquée.';
   rasterStage='test HEAD/Range du relais Cloudflare Pages sur la bande B4';
   rasterStatus.textContent='Test du relais Cloudflare Pages HTTP sur la bande B4…';
   const probe=await probeAsset(assets.red.href);
@@ -253,7 +287,11 @@ rasterButton.addEventListener('click',async()=>{
    readBand(GeoTIFF,assets.qa_pixel.href,bbox,proj4,crs)
   ]);
   rasterStage='calcul des indices NDVI/NDMI et contrôle qualité';
-  const n=Math.min(red.values.length,nir.values.length,swir.values.length,qa.values.length);
+  const bands=[red,nir,swir,qa],reference=red;
+  if(bands.some(b=>b.crs!==reference.crs||b.values.length!==reference.values.length||b.imageWidth!==reference.imageWidth||b.imageHeight!==reference.imageHeight||b.bbox.some((v,i)=>Math.abs(v-reference.bbox[i])>0.01))){
+   throw new Error('Les GeoTIFF des bandes n’ont pas le même CRS, les mêmes dimensions ou la même emprise. Calcul pixel à pixel annulé.');
+  }
+  const n=reference.values.length;
   const ndvi=[],ndmi=[];let rejected=0;
   for(let i=0;i<n;i++){
    const q=Number(qa.values[i]);
